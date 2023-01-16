@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:foody/models/user.dart';
+import 'package:foody/screens/auth_screen.dart';
 import 'package:foody/screens/profile_screen.dart';
 import 'package:foody/utils/http_service.dart';
+import 'package:foody/utils/shared_preference.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({
@@ -36,6 +38,21 @@ class _HomepageState extends State<Homepage> {
                   elevation: 0,
                   title: const Text('HomePage'),
                   actions: [
+                    IconButton(
+                      onPressed: () {
+                        GlobalSharedPreference.clearOneTimeLogin();
+                        GlobalSharedPreference.clearUserId();
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const AuthScreen()),
+                          (Route<dynamic> route) => false,
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.exit_to_app,
+                      ),
+                    ),
                     Material(
                       color: const Color.fromARGB(255, 47, 5, 116),
                       child: MaterialButton(

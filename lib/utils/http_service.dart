@@ -1,33 +1,35 @@
 import 'dart:convert';
-
+import 'dart:io';
 import 'package:foody/models/user.dart';
 import 'package:foody/utils/shared_preference.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
 
 class HttpService {
-  static var baseUrl = defaultTargetPlatform == TargetPlatform.android
-      ? Uri.parse('http://10.0.2.2:3000/')
-      : Uri.parse('http://localhost:3000/');
-
   static var registerEndPoint = 'user/register';
   static var loginEndPoint = 'user/login';
   static var getUserIdEndPoint = 'user/getUserId';
   static var getUsersEndPoint = 'user';
   static var getCategoriesEndPoint = 'categories';
   static var recipiesEndPoint = 'recipes';
+  static var mobileUrl = 'http://10.0.2.2:3000/';
+  static var webUrl = 'http://localhost:3000/';
+
+  static var baseUrl = defaultTargetPlatform == TargetPlatform.android
+      ? Uri.parse(mobileUrl)
+      : Uri.parse(webUrl);
 
   static Future<User> registerUser(
-    String username,
     String email,
     String password,
-    String imgageFile,
+    String username,
+    String userImage,
     String userType,
     String createdAt,
   ) async {
     var url = Uri.parse('$baseUrl$registerEndPoint');
 
-    var imageDummyPath = r'user-images\dummy-image\dummy-image.jpg';
     final http.Response response = await http.post(
       url,
       headers: <String, String>{
@@ -35,10 +37,10 @@ class HttpService {
       },
       body: jsonEncode(
         <String, dynamic>{
-          'username': username,
           'email': email,
           'password': password,
-          'userImage': imageDummyPath,
+          'username': username,
+          'userImage': userImage,
           'userType': userType,
           'createdAt': createdAt,
         },
@@ -109,5 +111,45 @@ class HttpService {
     } else {
       throw Exception('Error With The Server');
     }
+  }
+
+  static void updateUserImageMobile(File mobileImage) async {
+    String userId = await GlobalSharedPreference.getUserID();
+    var postUri = Uri.parse('$baseUrl' 'user/updateImage/$userId');
+    var request = http.MultipartRequest("PATCH", postUri);
+
+    request.headers['Content-Type'] = "multipart/form-data";
+
+    request.files
+        .add(await http.MultipartFile.fromPath('userImage', mobileImage.path,
+            contentType: MediaType(
+              'image',
+              'jpeg',
+            )));
+
+    request.send().then((response) {
+      if (response.statusCode == 201) {}
+    });
+  }
+
+  static void updateUserImageWeb(Uint8List webImage) async {
+    String userId = await GlobalSharedPreference.getUserID();
+    var postUri = Uri.parse('$baseUrl' 'user/updateImage/$userId');
+    var request = http.MultipartRequest("PATCH", postUri);
+
+    request.headers['Content-Type'] = "multipart/form-data";
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'userImage',
+        webImage,
+        filename: 'image.jpg',
+        contentType: MediaType('image', 'png'),
+      ),
+    );
+
+    request.send().then((response) {
+      if (response.statusCode == 201) {}
+    });
   }
 }
