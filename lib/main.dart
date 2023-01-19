@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:foody/screens/auth_screen.dart';
-import 'package:foody/screens/home_page.dart';
+import 'package:foody/screens/authScreen/auth_screen.dart';
+import 'package:foody/screens/homepage/home_page.dart';
 import 'package:foody/utils/shared_preference.dart';
+
+import 'screens/dashboard/admin_panel.dart.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,6 +32,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      // home: AdminPanel(),
       home: isOneTimeLogin ? const Homepage() : const AuthScreen(),
     );
   }

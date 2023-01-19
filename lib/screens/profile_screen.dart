@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:foody/screens/settings/settings.dart';
 import 'package:foody/utils/http_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ class ProfileScreen extends StatefulWidget {
   final String? id;
   final String? email;
   final String? userImage;
+  final String? userType;
 
   const ProfileScreen({
     super.key,
@@ -17,6 +19,7 @@ class ProfileScreen extends StatefulWidget {
     this.id,
     this.email,
     this.userImage,
+    this.userType,
   });
 
   @override
@@ -26,13 +29,14 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String? loggedUserID;
   String? userImage;
+
   bool isMe = false;
   File mobileImage = File("zz");
   String pickedImagePathName = 'zz';
   Uint8List webImage = Uint8List(10);
   static var baseUrl = defaultTargetPlatform == TargetPlatform.android
-      ? Uri.parse(HttpService.mobileUrl)
-      : Uri.parse(HttpService.webUrl);
+      ? Uri.parse(HttpService.baseUrlMobile)
+      : Uri.parse(HttpService.baseUrlWeb);
 
   @override
   void initState() {
@@ -46,6 +50,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.username ?? 'No username at this time'),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SettingPage(userType: widget.userType)),
+                );
+              },
+              icon: const Icon(Icons.settings))
+        ],
       ),
       body: Center(
         child: Column(

@@ -1,34 +1,35 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:foody/models/user.dart';
+import 'package:foody/models/category.dart';
+import 'package:foody/models/recipe.dart';
 import 'package:foody/utils/shared_preference.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
+import '../models/user.dart';
 
 class HttpService {
+  //http://localhost:3000/register
+
   static var registerEndPoint = 'user/register';
   static var loginEndPoint = 'user/login';
-  static var getUserIdEndPoint = 'user/getUserId';
   static var getUsersEndPoint = 'user';
   static var getCategoriesEndPoint = 'categories';
   static var recipiesEndPoint = 'recipes';
-  static var mobileUrl = 'http://10.0.2.2:3000/';
-  static var webUrl = 'http://localhost:3000/';
+  static var baseUrlMobile = 'http://10.0.2.2:3000/';
+  static var baseUrlWeb = 'http://localhost:3000/';
 
-  static var baseUrl = defaultTargetPlatform == TargetPlatform.android
-      ? Uri.parse(mobileUrl)
-      : Uri.parse(webUrl);
-
-  static Future<User> registerUser(
-    String email,
-    String password,
-    String username,
-    String userImage,
-    String userType,
-    String createdAt,
-  ) async {
-    var url = Uri.parse('$baseUrl$registerEndPoint');
+  static Future<User> registerUser({
+    required String username,
+    required String email,
+    required String password,
+    required String imgagePath,
+    required String userType,
+    required String createdAt,
+  }) async {
+    var url = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' '$registerEndPoint')
+        : Uri.parse('$baseUrlWeb' '$registerEndPoint');
 
     final http.Response response = await http.post(
       url,
@@ -36,11 +37,11 @@ class HttpService {
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(
-        <String, dynamic>{
+        <String, String>{
+          'username': username,
           'email': email,
           'password': password,
-          'username': username,
-          'userImage': userImage,
+          'userImage': imgagePath,
           'userType': userType,
           'createdAt': createdAt,
         },
@@ -63,7 +64,9 @@ class HttpService {
   }
 
   static Future<User> loginUser(String email, String password) async {
-    var url = Uri.parse('$baseUrl$loginEndPoint');
+    var url = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' '$loginEndPoint')
+        : Uri.parse('$baseUrlWeb' '$loginEndPoint');
 
     final http.Response response = await http.post(
       url,
@@ -93,7 +96,10 @@ class HttpService {
 
   static Future<User> getUserById() async {
     String userId = await GlobalSharedPreference.getUserID();
-    var url = Uri.parse('$baseUrl' 'user/$userId');
+
+    var url = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' 'user/$userId')
+        : Uri.parse('$baseUrlWeb' 'user/$userId');
 
     final http.Response response = await http.get(
       url,
@@ -113,10 +119,98 @@ class HttpService {
     }
   }
 
+  // static Future<Recipe> saveRecipe({
+  //   required String postName,
+  //   required List usersIn,
+  //   required int maxPlayers,
+  //   required String utcLocation,
+  //   required String userId,
+  //   required String postUserImagePath,
+  //   required String postUserName,
+  //   required String createdAt,
+  //   required String timeToPlay,
+  //   required String reasonToPlay,
+  // }) async {
+  //    var url = defaultTargetPlatform == TargetPlatform.android
+  //       ? Uri.parse('$baseUrlMobile' '$recipiesEndPoint')
+  //       : Uri.parse('$baseUrlWeb' '$recipiesEndPoint');
+  //   final http.Response response = await http.post(
+  //     url,
+  //     headers: <String, String>{
+  //       'Content-Type': 'application/json; charset=UTF-8',
+  //     },
+  //     body: jsonEncode(
+  //       <String, dynamic>{
+  //         'postName': postName,
+  //         'usersIn': usersIn,
+  //         'maxPlayers': maxPlayers,
+  //         'utcLocation': utcLocation,
+  //         'userId': userId,
+  //         'postUserImagePath': postUserImagePath,
+  //         'postUserName': postUserName,
+  //         'createdAt': createdAt,
+  //         'timeToPlay': timeToPlay,
+  //         'reasonToPlay': reasonToPlay,
+  //       },
+  //     ),
+  //   );
+
+  //   var serverResponse = response.body;
+
+  //   if (response.statusCode == 201) {
+  //     return Recipe.fromJson(
+  //       jsonDecode(serverResponse),
+  //     );
+  //   } else if (response.statusCode == 409) {
+  //     return Recipe.fromJson(
+  //       jsonDecode(serverResponse),
+  //     );
+  //   } else if (response.statusCode == 204) {
+  //     return Recipe.fromJson(
+  //       jsonDecode(serverResponse),
+  //     );
+  //   } else {
+  //     throw Exception('Error With The Server');
+  //   }
+  // }
+
+  static Future<Recipe> getAllRecipes(List<Recipe> recipes) async {
+    var url = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' '$recipiesEndPoint')
+        : Uri.parse('$baseUrlWeb' '$recipiesEndPoint');
+
+    final http.Response response = await http.get(
+      url,
+    );
+
+    var serverResponse = response.body;
+    if (response.statusCode == 200) {
+      //var data = jsonDecode(responseData.body);
+      Map<String, dynamic> map = jsonDecode(response.body);
+
+      List<dynamic> postData = map["posts"];
+
+      for (var i in postData) {
+        recipes.add(Recipe.fromJson(i));
+      }
+
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
+    } else {
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
+    }
+  }
+
   static void updateUserImageMobile(File mobileImage) async {
     String userId = await GlobalSharedPreference.getUserID();
-    var postUri = Uri.parse('$baseUrl' 'user/updateImage/$userId');
-    var request = http.MultipartRequest("PATCH", postUri);
+    var url = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' 'user/updateImage/$userId')
+        : Uri.parse('$baseUrlWeb' 'user/updateImage/$userId');
+
+    var request = http.MultipartRequest("PATCH", url);
 
     request.headers['Content-Type'] = "multipart/form-data";
 
@@ -134,8 +228,10 @@ class HttpService {
 
   static void updateUserImageWeb(Uint8List webImage) async {
     String userId = await GlobalSharedPreference.getUserID();
-    var postUri = Uri.parse('$baseUrl' 'user/updateImage/$userId');
-    var request = http.MultipartRequest("PATCH", postUri);
+    var url = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' 'user/updateImage/$userId')
+        : Uri.parse('$baseUrlWeb' 'user/updateImage/$userId');
+    var request = http.MultipartRequest("PATCH", url);
 
     request.headers['Content-Type'] = "multipart/form-data";
 
@@ -151,5 +247,70 @@ class HttpService {
     request.send().then((response) {
       if (response.statusCode == 201) {}
     });
+  }
+
+  static Future<User> getAllUsers(List<User> users) async {
+    var baseUrl = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' '$getUsersEndPoint')
+        : Uri.parse('$baseUrlWeb' '$getUsersEndPoint');
+
+    final http.Response response = await http.get(
+      baseUrl,
+    );
+
+    var serverResponse = response.body;
+    if (response.statusCode == 200) {
+      //var data = jsonDecode(responseData.body);
+      Map<String, dynamic> map = jsonDecode(response.body);
+
+      List<dynamic> userData = map["users"];
+
+      for (var i in userData) {
+        users.add(User.fromJson(i));
+      }
+      // if (_users.any((item) => item.id.contains(userId))) {
+      //   _users.removeWhere((item) => item.id == userId);
+      // }
+      // _users.removeWhere((item) => item.isSocialBothered == false);
+
+      return User.fromJson(
+        jsonDecode(serverResponse),
+      );
+    } else {
+      return User.fromJson(
+        jsonDecode(serverResponse),
+      );
+    }
+  }
+
+  static Future<CategoryModel> getAllCategories(
+      List<CategoryModel> categories) async {
+    var baseUrl = defaultTargetPlatform == TargetPlatform.android
+        ? Uri.parse('$baseUrlMobile' '$getCategoriesEndPoint')
+        : Uri.parse('$baseUrlWeb' '$getCategoriesEndPoint');
+
+    final http.Response response = await http.get(
+      baseUrl,
+    );
+
+    var serverResponse = response.body;
+    if (response.statusCode == 200) {
+      //var data = jsonDecode(responseData.body);
+      Map<String, dynamic> map = jsonDecode(response.body);
+
+      List<dynamic> categoryData = map["category"];
+
+      for (var i in categoryData) {
+        categories.add(CategoryModel.fromJson(i));
+      }
+
+      return CategoryModel.fromJson(
+        jsonDecode(serverResponse),
+      );
+    } else {
+      return CategoryModel.fromJson(
+        jsonDecode(serverResponse),
+      );
+    }
   }
 }
