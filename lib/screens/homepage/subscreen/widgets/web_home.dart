@@ -174,7 +174,7 @@ class _WebHomeState extends State<WebHome> {
                   email: widget.email ?? '',
                   id: widget.id ?? '',
                   userImage: widget.userImage ?? '',
-                  userType: widget.userImage ?? '',
+                  userType: widget.userType ?? '',
                   username: widget.username ?? '',
                   userFollowing: widget.userFollowing,
                 )),
@@ -196,6 +196,13 @@ class _WebHomeState extends State<WebHome> {
               color: Colors.white,
               fontSize: size.width <= 800 ? 16 : 28,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            widget.userType ?? 'UserType',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: size.width <= 800 ? 16 : 28,
             ),
           ),
         ],

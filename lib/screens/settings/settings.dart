@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:foody/models/settingsModel.dart';
@@ -24,6 +26,7 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void initState() {
     addAdmin();
+
     super.initState();
   }
 
@@ -201,8 +204,9 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  void addAdmin() {
+  addAdmin() {
     if (widget.userType!.contains('user')) {
+      log('${widget.userType}');
       if (mounted) {
         setState(() {
           settingsName.removeAt(3);

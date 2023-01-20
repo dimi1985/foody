@@ -32,7 +32,14 @@ class _HomeRecipeState extends State<HomeRecipe> {
       body: FutureBuilder<Recipe>(
         future: getFutureRecipes,
         builder: (context, snapshot) {
-          return kIsWeb ? gridLisview(size) : mobileListview();
+          if (snapshot.hasData) {
+            return !snapshot.data!.isApproved
+                ? Container()
+                : kIsWeb
+                    ? gridLisview(size)
+                    : mobileListview();
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );
@@ -54,8 +61,9 @@ class _HomeRecipeState extends State<HomeRecipe> {
             },
           )
         : GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent:
+                    defaultTargetPlatform == TargetPlatform.android ? 120 : 200,
                 childAspectRatio: 3 / 2,
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20),

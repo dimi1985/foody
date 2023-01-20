@@ -62,32 +62,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         builder: (context, snapshot) {
           return Scaffold(
             backgroundColor: Colors.white,
-            appBar: defaultTargetPlatform == TargetPlatform.android
-                ? AppBar(
-                    elevation: 0,
-                    iconTheme: const IconThemeData(color: Colors.black),
-                    backgroundColor: Colors.white,
-                    title: const Text(
+            appBar: AppBar(
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.black),
+              backgroundColor: Colors.white,
+              title: defaultTargetPlatform == TargetPlatform.android
+                  ? const Text('')
+                  : const Text(
                       'back',
                       style: TextStyle(color: Colors.black),
                     ),
-                    actions: [
-                      IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      SettingPage(userType: widget.userType)),
-                            );
-                          },
-                          icon: const Icon(Icons.settings))
-                    ],
-                  )
-                : null,
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                SettingPage(userType: widget.userType)),
+                      );
+                    },
+                    icon: const Icon(Icons.settings))
+              ],
+            ),
             body: kIsWeb && size.width > 600
-                ? webProfileView()
-                : mobileProfileView(),
+                ? webProfileView(size)
+                : mobileProfileView(size),
           );
         });
   }
@@ -139,9 +139,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  webProfileView() {
+  webProfileView(Size size) {
     return Center(
       child: Column(
+        children: [
+          const SizedBox(
+            height: 30,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: profileContainer(),
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          Expanded(flex: 1, child: recipeSocialCountContainer(recipes)),
+          const SizedBox(
+            height: 30,
+          ),
+          Expanded(flex: 1, child: userRecipes(size)),
+        ],
+      ),
+    );
+  }
+
+  mobileProfileView(Size size) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(
             height: 30,
@@ -157,13 +182,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(
             height: 30,
           ),
-          userRecipes(),
+          userRecipes(size),
         ],
       ),
     );
   }
-
-  mobileProfileView() {}
 
   Widget profileContainer() {
     return Column(children: [
@@ -201,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-        Text('|'),
+        const Text('|'),
         const SizedBox(
           width: 25,
         ),
@@ -227,28 +250,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget userRecipes() {
+  Widget userRecipes(Size size) {
     return SizedBox(
-      width: 600,
-      height: 500,
-      child: defaultTargetPlatform == TargetPlatform.android
-          ? ListView.builder(
-              itemCount: recipes!.length,
-              itemBuilder: ((context, index) {
-                var recipe = recipes![index];
-                return RecipeCard(recipe);
-              }))
-          : GridView.builder(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 200,
-                  childAspectRatio: 3 / 2,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20),
-              itemCount: recipes!.length,
-              itemBuilder: (BuildContext ctx, index) {
-                var recipe = recipes![index];
-                return RecipeCard(recipe);
-              }),
+      width: defaultTargetPlatform == TargetPlatform.android
+          ? size.width * 0.2
+          : size.width * 0.6,
+      height: defaultTargetPlatform == TargetPlatform.android
+          ? size.height * 0.4
+          : size.width * 0.3,
+      child: GridView.builder(
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent:
+                  defaultTargetPlatform == TargetPlatform.android ? 60 : 200,
+              childAspectRatio: 3 / 2,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20),
+          itemCount: recipes!.length,
+          itemBuilder: (BuildContext ctx, index) {
+            var recipe = recipes![index];
+            return RecipeCard(recipe);
+          }),
     );
   }
 }

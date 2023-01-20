@@ -90,7 +90,9 @@ class _AddRecipeScreenState extends State<AddRecipePage>
                 child: SingleChildScrollView(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: size.width * 0.7,
+                      maxWidth: defaultTargetPlatform == TargetPlatform.android
+                          ? size.width
+                          : size.width * 0.7,
                     ),
                     child: Card(
                       elevation: 5,
@@ -112,13 +114,24 @@ class _AddRecipeScreenState extends State<AddRecipePage>
                               key: _formKey,
                               child: Column(
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      nameTextField(),
-                                      durationTextField(),
-                                    ],
-                                  ),
+                                  defaultTargetPlatform ==
+                                          TargetPlatform.android
+                                      ? Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            nameTextField(),
+                                            durationTextField(),
+                                          ],
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            nameTextField(),
+                                            durationTextField(),
+                                          ],
+                                        ),
                                   difficultySelection(size),
                                   ingredientListTextField(),
                                   preparationTextField(),
@@ -352,7 +365,7 @@ class _AddRecipeScreenState extends State<AddRecipePage>
           child: TextFormField(
             controller: preparationController,
             keyboardType: TextInputType.multiline,
-            maxLines: 20,
+            maxLines: defaultTargetPlatform == TargetPlatform.android ? 10 : 20,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.all(20.0),
               border: InputBorder.none,

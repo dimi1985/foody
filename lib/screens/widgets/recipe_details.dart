@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foody/models/recipe.dart';
 import 'package:foody/utils/http_service.dart';
@@ -18,7 +19,7 @@ class _RecipeDetailsState extends State<RecipeDetails> {
     recipeImage = '${HttpService.url}'
             '${widget.recipe.recipeImage}'
         .replaceAll(r'\', '/');
-
+    //List<Widget> widgets = list.map((name) => new Text(name)).toList();
     super.initState();
   }
 
@@ -26,6 +27,7 @@ class _RecipeDetailsState extends State<RecipeDetails> {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
+      appBar: defaultTargetPlatform == TargetPlatform.android ? AppBar() : null,
       body: Center(
         child: Column(
           children: [
@@ -83,7 +85,7 @@ class _RecipeDetailsState extends State<RecipeDetails> {
             ),
             SizedBox(
               width: MediaQuery.of(context).size.width * 0.7,
-              height: MediaQuery.of(context).size.height * 0.4,
+              height: MediaQuery.of(context).size.height * 0.5,
               child: size.width < 600
                   ? SingleChildScrollView(
                       child: Column(
@@ -140,6 +142,8 @@ class _RecipeDetailsState extends State<RecipeDetails> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const Padding(
                               padding: EdgeInsets.all(8.0),

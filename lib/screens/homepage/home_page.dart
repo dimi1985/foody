@@ -5,8 +5,8 @@ import 'package:foody/models/user.dart';
 import 'package:foody/screens/addRecipe/add_recipe_page.dart';
 import 'package:foody/screens/category/category_recipe_page.dart';
 import 'package:foody/screens/homepage/subscreen/home_recipe.dart';
-import 'package:foody/screens/homepage/subscreen/mobile_home.dart';
-import 'package:foody/screens/homepage/subscreen/web_home.dart';
+import 'package:foody/screens/homepage/subscreen/widgets/mobile_home.dart';
+import 'package:foody/screens/homepage/subscreen/widgets/web_home.dart';
 
 import 'package:foody/screens/team_page.dart';
 import 'package:foody/utils/http_service.dart';
@@ -57,15 +57,9 @@ class _HomepageState extends State<Homepage> {
 
   bool isHovered = false;
   bool isHovering = false;
-  PageController pageController = PageController(
-    initialPage: 0,
-    keepPage: true,
-  );
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-
     return FutureBuilder<User>(
         future: getUser,
         builder: (context, snapshot) {

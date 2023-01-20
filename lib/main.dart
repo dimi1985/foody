@@ -40,6 +40,9 @@ class _MyAppState extends State<MyApp> {
 
   Future getOneTimeLogin() async {
     GlobalSharedPreference.getOneTimeLogin().then((value) {
+      if (isOneTimeLogin == null) {
+        GlobalSharedPreference.setOneTimeLogin(false);
+      }
       setState(() {
         isOneTimeLogin = value;
       });

@@ -58,7 +58,7 @@ class _MobileHomeState extends State<MobileHome> {
                 email: widget.email ?? '',
                 id: widget.id ?? '',
                 userImage: widget.userImage ?? '',
-                userType: widget.userImage ?? '',
+                userType: widget.userType ?? '',
                 username: widget.username ?? '',
                 userFollowing: widget.userFollowing,
               ),
