@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:foody/screens/addRecipe/add_recipe_page.dart';
 import 'package:foody/screens/dashboard/subscreen/admin_users.dart';
 
 import 'subscreen/admin_categories.dart';
@@ -16,202 +17,54 @@ class _AdminPanelState extends State<AdminPanel> {
       const TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: defaultTargetPlatform == TargetPlatform.android
-          ? AppBar(
-              title: const Text('AdminPanel'),
-            )
-          : null,
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 400,
-                    width: 400,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0)),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                'Users',
-                                style: globalTextSyle,
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 1,
-                            child: AdminUsers(),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 25,
-                ),
-                Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 400,
-                    width: 400,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0)),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                'Categories',
-                                style: globalTextSyle,
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 1,
-                            child: AdminCategories(),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 25,
-                ),
-                Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 400,
-                    width: 400,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0)),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                'Recipies',
-                                style: globalTextSyle,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 50,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 400,
-                    width: 400,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0)),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                'Current Users Online',
-                                style: globalTextSyle,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 25,
-                ),
-                Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 400,
-                    width: 400,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0)),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                'Banned users',
-                                style: globalTextSyle,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 25,
-                ),
-                Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 400,
-                    width: 400,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0)),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                'Banned Recipes',
-                                style: globalTextSyle,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
+    return SafeArea(
+      child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Admin Panel'),
+            centerTitle: true,
+          ),
+          body: ListView(
+            children: [
+              GestureDetector(
+                  onTap: () => _gotToPanels('Users'),
+                  child: const ListTile(title: Text('Users'))),
+              GestureDetector(
+                  onTap: () => _gotToPanels('Recipes'),
+                  child: const ListTile(title: Text('Recipes'))),
+              GestureDetector(
+                  onTap: () => _gotToPanels('Categories'),
+                  child: const ListTile(title: Text('Categories')))
+            ],
+          )),
     );
+  }
+
+  _gotToPanels(String action) {
+    switch (action) {
+      case 'Users':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminUsers(),
+          ),
+        );
+        break;
+      case 'Recipes':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AddRecipePage(),
+          ),
+        );
+        break;
+      case 'Categories':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminCategories(),
+          ),
+        );
+        break;
+    }
   }
 }

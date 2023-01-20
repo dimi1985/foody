@@ -38,6 +38,7 @@ dependencies:
   cached_network_image: ^3.2.3
   hovering: ^1.0.4
   hexcolor: ^3.0.1
+  permission_handler: ^10.2.0
 
 
   # The following adds the Cupertino Icons font to your application.

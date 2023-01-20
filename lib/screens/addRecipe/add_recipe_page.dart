@@ -1,15 +1,14 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:foody/utils/shared_preference.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:flutter/material.dart';
 import 'package:foody/models/category.dart';
-import 'package:foody/models/recipe.dart';
+import 'package:foody/models/user.dart';
 import 'package:foody/utils/http_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter/services.dart';
 
 class AddRecipePage extends StatefulWidget {
   const AddRecipePage({Key? key}) : super(key: key);
@@ -18,48 +17,49 @@ class AddRecipePage extends StatefulWidget {
   State<AddRecipePage> createState() => _AddRecipeScreenState();
 }
 
-class _AddRecipeScreenState extends State<AddRecipePage> {
+class _AddRecipeScreenState extends State<AddRecipePage>
+    with AutomaticKeepAliveClientMixin {
+  final List<CategoryModel> _categories = [];
+  late Future<CategoryModel> _futureCategory;
   final _formKey = GlobalKey<FormState>();
-  final scaffoldState = GlobalKey<ScaffoldState>();
   final nameController = TextEditingController();
   final durationController = TextEditingController();
   final preparationController = TextEditingController();
-  late File _pickedImage = File('');
-  bool isLoading = false;
-  bool isUploaded = false;
-
-  final List<CategoryModel> _categories = [];
-  late Future<CategoryModel> _futureCategory;
-
-  int selectedIndex = 0;
-
-  var nameRecipe = '';
-  var durationRecipe = '';
-  var durationPreparation = '';
-
-  final List<String> ingredientList = [];
-
-  final List<TextEditingController> _controllers = [];
-  final List<TextFormField> _fields = [];
+  File mobileImage = File("zz");
+  Uint8List webImage = Uint8List(10);
 
   List<DropdownMenuItem<String>> get dropdownItemsDifficulty {
     List<DropdownMenuItem<String>> menuItems = [
-      DropdownMenuItem(child: const Text("Easy"), value: "Easy"),
-      DropdownMenuItem(child: const Text("Advanded"), value: "Advanded"),
-      DropdownMenuItem(child: const Text("Hard"), value: "Hard"),
+      const DropdownMenuItem(value: "Easy", child: Text("Easy")),
+      const DropdownMenuItem(value: "Advanded", child: Text("Advanded")),
+      const DropdownMenuItem(value: "Hard", child: Text("Hard")),
     ];
     return menuItems;
   }
 
   String selectedValueDiffiCulty = "Easy";
 
+  final List<String> ingredientList = [];
+
+  final List<TextEditingController> _controllers = [];
+  final List<TextFormField> _fields = [];
+
+  int selectedIndex = 0;
+
+  bool isLoading = false;
+  bool isUploaded = false;
+
+  late Future<User> getUser;
+  String? id;
+  String? username;
+  String? email;
+  String? userImage;
+  String? userType;
+
   @override
   void initState() {
-    _futureCategory =
-        HttpService.getAllCategories(_categories).then((value) async {
-      return Future.value(value);
-    });
-
+    getGategorieList();
+    getUserFields();
     super.initState();
   }
 
@@ -78,254 +78,57 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    Size size = MediaQuery.of(context).size;
     return FutureBuilder<CategoryModel>(
         future: _futureCategory,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            Size size = MediaQuery.of(context).size;
             return Scaffold(
-              appBar: kIsWeb
-                  ? null
-                  : AppBar(
-                      elevation: 0,
-                      backgroundColor:
-                          HexColor(_getCategoryColor(selectedIndex)),
-                      actions: [
-                        Container(
-                          margin: const EdgeInsets.all(12),
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(
-                                HexColor(
-                                  _getCategoryColor(selectedIndex),
-                                ),
-                              ),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _showSheet(context);
-                              });
-                            },
-                            child: const Text(
-                              'Preview',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        )
-                      ],
-                      title: const Text(
-                        'Add Recipe',
-                        style: TextStyle(
-                            fontFamily: 'Caudex',
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20),
-                      ),
+              body: Center(
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: size.width * 0.7,
                     ),
-              body: AnimatedContainer(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [
-                      HexColor(_getCategoryColor(selectedIndex)),
-                      Colors.white,
-                    ],
-                  ),
-                ),
-                duration: const Duration(seconds: 1),
-                curve: Curves.fastOutSlowIn,
-                child: ListView(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: Stack(
-                        children: [
-                          _pickedImage.path.isEmpty
-                              ? Container(
-                                  height: 150,
-                                )
-                              : Image.file(
-                                  _pickedImage,
-                                  width: double.infinity,
-                                  height: 200,
-                                  fit: BoxFit.fitWidth,
-                                ),
-                          Positioned(
-                            bottom: 10,
-                            left: 130,
-                            child: ElevatedButton.icon(
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all(
-                                  HexColor(
-                                    _getCategoryColor(selectedIndex),
-                                  ),
-                                ),
-                              ),
-                              onPressed: _imgFromGallery,
-                              icon: const Icon(
-                                Icons.photo_album_outlined,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                'Add Photo',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3.0),
-                      child: SizedBox(
-                          height: 40.0, // 35
-                          child: FutureBuilder<CategoryModel>(
-                              future: _futureCategory,
-                              builder: (context, AsyncSnapshot snapshot) {
-                                if (snapshot.hasData) {
-                                  return ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: _categories.length,
-                                      itemBuilder: (context, index) {
-                                        return listCategoryItems(index);
-                                      });
-                                }
-                                return const Text('Loading...');
-                              })),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(child: const Text('Difficulty:')),
-                          Expanded(
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton(
-                                style: const TextStyle(
-                                    fontSize: 14, color: Colors.white),
-                                underline: Container(), //empty line
-                                value: selectedValueDiffiCulty,
-                                isExpanded: true,
-                                dropdownColor: Colors.blueGrey,
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    selectedValueDiffiCulty = newValue!;
-                                  });
-                                },
-                                items: dropdownItemsDifficulty,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                    child: Card(
+                      elevation: 5,
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: TextFormField(
-                                  controller: nameController,
-                                  keyboardType: TextInputType.name,
-                                  decoration: InputDecoration(
-                                      contentPadding:
-                                          const EdgeInsets.all(20.0),
-                                      hintText: 'Name Recipe',
-                                      border: InputBorder.none,
-                                      hintStyle: const TextStyle(
-                                          color: Colors.blueGrey,
-                                          fontSize: 15.0),
-                                      hintMaxLines: 20),
-                                ),
-                              ),
-                            ),
                             const SizedBox(
-                              width: 10,
+                              height: 30,
                             ),
-                            Expanded(
-                              child: Container(
-                                margin: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: TextFormField(
-                                  controller: durationController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.all(20.0),
-                                    hintText: 'Preparation Duration',
-                                    border: InputBorder.none,
-                                    hintStyle: const TextStyle(
-                                        color: Colors.blueGrey, fontSize: 15.0),
+                            imageContainer(size),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            categoryList(size),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            Form(
+                              key: _formKey,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      nameTextField(),
+                                      durationTextField(),
+                                    ],
                                   ),
-                                ),
+                                  difficultySelection(size),
+                                  ingredientListTextField(),
+                                  preparationTextField(),
+                                  button(size),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ]),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SizedBox(
-                        height: 300,
-                        width: 300,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: Row(children: [
-                                const Text('Press + to Add Recipe'),
-                                IconButton(
-                                    onPressed: _addTextFields,
-                                    icon: const Icon(Icons.add))
-                              ]),
-                            ),
-                            Expanded(child: _listView()),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        reverse: true,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          child: SizedBox(
-                            height: 200,
-                            child: TextFormField(
-                              controller: preparationController,
-                              keyboardType: TextInputType.multiline,
-                              maxLines: 100,
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.all(20.0),
-                                border: InputBorder.none,
-                                hintText: 'First we cut the vegetables and...',
-                                hintStyle:
-                                    const TextStyle(color: Colors.blueGrey),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
+                  ),
                 ),
               ),
             );
@@ -334,51 +137,331 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
         });
   }
 
-  _getCategoryName(int selectedIndex) {
-    return _categories[selectedIndex];
+  Widget imageContainer(Size size) {
+    return Column(
+      children: [
+        (mobileImage.path == "zz")
+            ? const Text('Select Image')
+            : (kIsWeb)
+                ? Image.memory(
+                    webImage,
+                    width: size.width < 600 ? 50 : 300,
+                    height: size.width < 600 ? 50 : 300,
+                  )
+                : Image.file(
+                    mobileImage,
+                    width: 50,
+                    height: 50,
+                  ),
+        const SizedBox(
+          height: 20,
+          width: double.infinity,
+        ),
+        SizedBox(
+          width: size.width < 600 ? 100 : 130,
+          height: size.width < 600 ? 50 : 60,
+          child: ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
+            ),
+            onPressed: () => selectImage(),
+            child: Text(
+              "Select Image",
+              style: TextStyle(fontSize: size.width < 600 ? 12 : 16),
+            ),
+          ),
+        )
+      ],
+    );
   }
 
-  _getRecipeName() {
-    return nameController.text;
+  Future getGategorieList() async {
+    _futureCategory =
+        HttpService.getAllCategories(_categories).then((value) async {
+      return Future.value(value);
+    });
   }
 
-  _getRecipeDuration() {
-    return durationController.text;
+  void getUserFields() {
+    getUser = HttpService.getUserById().then((value) {
+      setState(() {
+        id = value.id;
+        username = value.username;
+        email = value.email;
+        userImage = value.userImage;
+        userType = value.userType;
+      });
+      return Future.value(value);
+    });
   }
 
-  _getRecipePreparation() {
-    return preparationController.text;
-  }
+  selectImage() async {
+    // MOBILE
+    if (!kIsWeb) {
+      final ImagePicker picker = ImagePicker();
+      XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-  _getDifficulty() {
-    return selectedValueDiffiCulty;
-  }
+      if (image != null) {
+        var selected = File(image.path);
 
-  _getCategoryID(int index) {
-    var catId = _categories[index].categoryId;
-
-    return catId;
-  }
-
-  _getCategoryColor(int index) {
-    var catColor = '';
-    if (_categories.isNotEmpty) {
-      catColor = _categories[index].categoryHexColor;
-    } else {
-      catColor = '#65e88f';
+        setState(() {
+          mobileImage = selected;
+        });
+      } else {
+        // showToast("No file selected");
+      }
     }
-
-    return catColor;
+    // WEB
+    else if (kIsWeb) {
+      final ImagePicker picker = ImagePicker();
+      XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        var f = await image.readAsBytes();
+        setState(() {
+          mobileImage = File("a");
+          webImage = f;
+        });
+      } else {
+        // showToast("No file selected");
+      }
+    } else {
+      // showToast("Permission not granted");
+    }
   }
 
-  _getCategoryFont(int index) {
-    GlobalSharedPreference.clearTempGoogleFont();
-    var catFont = _categories[index].categoryGoogleFont;
-    GlobalSharedPreference.setTempGoogleFont(catFont);
-    return catFont;
+  Widget categoryList(Size size) {
+    return SizedBox(
+      height: 50,
+      width: size.width * 0.7,
+      child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _categories.length,
+          itemBuilder: (context, index) {
+            return listCategoryItems(index);
+          }),
+    );
   }
 
-  void _showSheet(BuildContext context) {
+  Widget nameTextField() {
+    return Container(
+      height: 50,
+      width: 200,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: TextFormField(
+        controller: nameController,
+        keyboardType: TextInputType.name,
+        inputFormatters: [FilteringTextInputFormatter.singleLineFormatter],
+        decoration: const InputDecoration(
+            contentPadding: EdgeInsets.all(20.0),
+            hintText: 'Name Recipe',
+            border: InputBorder.none,
+            hintStyle: TextStyle(color: Colors.blueGrey, fontSize: 15.0),
+            hintMaxLines: 20),
+      ),
+    );
+  }
+
+  Widget durationTextField() {
+    return Container(
+      height: 50,
+      width: 100,
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: TextFormField(
+        controller: durationController,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.all(20.0),
+          hintText: 'Duration',
+          border: InputBorder.none,
+          hintStyle: TextStyle(color: Colors.blueGrey, fontSize: 15.0),
+        ),
+      ),
+    );
+  }
+
+  Widget difficultySelection(Size size) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: size.width * 0.5,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton(
+            style: const TextStyle(
+                fontSize: 14, color: Color.fromARGB(255, 86, 20, 192)),
+            underline: Container(), //empty line
+            value: selectedValueDiffiCulty,
+            isExpanded: true,
+            dropdownColor: const Color.fromARGB(255, 255, 111, 68),
+            onChanged: (String? newValue) {
+              setState(() {
+                selectedValueDiffiCulty = newValue!;
+              });
+            },
+            items: dropdownItemsDifficulty,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget ingredientListTextField() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SizedBox(
+        height: 300,
+        width: 300,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(children: [
+              const Text('Press + to Add Recipe'),
+              IconButton(onPressed: addTextFields, icon: const Icon(Icons.add))
+            ]),
+            SizedBox(
+              width: 600,
+              height: 240,
+              child: ingredientlistViewTextField(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget preparationTextField() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        reverse: true,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: TextFormField(
+            controller: preparationController,
+            keyboardType: TextInputType.multiline,
+            maxLines: 20,
+            decoration: const InputDecoration(
+              contentPadding: EdgeInsets.all(20.0),
+              border: InputBorder.none,
+              hintText: 'First we cut the vegetables and...',
+              hintStyle: TextStyle(color: Colors.blueGrey),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  button(Size size) {
+    return Container(
+      margin: const EdgeInsets.all(12),
+      child: ElevatedButton(
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all(Colors.red),
+        ),
+        onPressed: () {
+          setState(() {
+            _showSheet(context, size);
+          });
+        },
+        child: const Text(
+          'Preview',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  void addTextFields() {
+    var field = TextFormField();
+    final controller = TextEditingController();
+    field = TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(20.0),
+          hintText: 'Add Ingredient',
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 15.0),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              setState(() {
+                _fields.remove(field);
+                _controllers.remove(controller);
+              });
+            },
+          )),
+    );
+
+    setState(() {
+      _controllers.add(controller);
+      _fields.add(field);
+    });
+  }
+
+  Widget ingredientlistViewTextField() {
+    return LimitedBox(
+      child: ListView.builder(
+        itemCount: _fields.length,
+        itemBuilder: (context, index) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(5),
+            ),
+            margin: const EdgeInsets.all(5),
+            child: _fields[index],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget listCategoryItems(int index) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedIndex = index;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(left: 5.0),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 15.0, //20
+          vertical: 10.0, //5
+        ),
+        decoration: BoxDecoration(
+            color: selectedIndex == index
+                ? const Color.fromARGB(255, 226, 130, 138)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.0)),
+        child: Center(
+          child: Text(
+            _categories[index].categoryName,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 85, 4, 4),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSheet(BuildContext context, Size size) {
     showModalBottomSheet(
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -401,9 +484,9 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                     expandedHeight: 200,
                     flexibleSpace: FlexibleSpaceBar(
                       background: ClipRRect(
-                        child: _pickedImage.path.isEmpty
-                            ? Center(
-                                child: const Text(
+                        child: mobileImage.path.isEmpty
+                            ? const Center(
+                                child: Text(
                                   'Please Select an Image',
                                   style: TextStyle(
                                       color: Colors.grey,
@@ -411,10 +494,17 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                                       fontSize: 16),
                                 ),
                               )
-                            : Image.file(
-                                _pickedImage,
-                                fit: BoxFit.cover,
-                              ),
+                            : (kIsWeb)
+                                ? Image.memory(
+                                    webImage,
+                                    width: size.width < 600 ? 50 : 300,
+                                    height: size.width < 600 ? 50 : 300,
+                                  )
+                                : Image.file(
+                                    mobileImage,
+                                    width: 50,
+                                    height: 50,
+                                  ),
                       ),
                     ),
                   ),
@@ -431,11 +521,7 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                             decoration: BoxDecoration(
                               border: Border.all(
                                 width: 2.0,
-                                color: selectedIndex == -1
-                                    ? HexColor(
-                                        _getCategoryColor(selectedIndex),
-                                      )
-                                    : Colors.green,
+                                color: const Color.fromARGB(255, 76, 91, 175),
                               ),
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(5.0),
@@ -445,11 +531,9 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                                 Text(_getCategoryName(selectedIndex).toString(),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 15,
-                                      color: HexColor(
-                                        _getCategoryColor(selectedIndex),
-                                      ),
+                                      color: Color.fromARGB(255, 76, 91, 175),
                                       fontWeight: FontWeight.w500,
                                     )),
                           ),
@@ -514,9 +598,9 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                         const SizedBox(
                           height: 20,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: const Text(
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
                             "INGREDIENTS",
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
@@ -553,9 +637,9 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                         const SizedBox(
                           height: 20,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: const Text(
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
                             "PREPARATION",
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
@@ -579,13 +663,6 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                           height: 20,
                         ),
                         ElevatedButton(
-                            child: isLoading
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : !isUploaded
-                                    ? const Text('Upload')
-                                    : const Icon(Icons.check),
                             onPressed: isLoading
                                 ? null
                                 : () {
@@ -605,7 +682,14 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
                                         saveRecipeToServer(bottomSheetState);
                                       });
                                     }
-                                  }),
+                                  },
+                            child: isLoading
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : !isUploaded
+                                    ? const Text('Upload')
+                                    : const Icon(Icons.check)),
                       ],
                     ),
                   ),
@@ -616,123 +700,16 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
         });
   }
 
-  // _pickImage() {
-  //   showModalBottomSheet(
-  //       context: context,
-  //       builder: (BuildContext bc) {
-  //         return SafeArea(
-  //           child: Wrap(
-  //             children: [
-  //               ListTile(
-  //                   leading: const Icon(Icons.photo_library),
-  //                   title: const Text('Photo Library').tr(),
-  //                   onTap: () {
-  //                     _imgFromGallery();
-  //                     Navigator.of(context).pop();
-  //                   }),
-  //               ListTile(
-  //                 leading: const Icon(Icons.photo_camera),
-  //                 title: const Text('Camera').tr(),
-  //                 onTap: () {
-  //                   _imgFromCamera();
-  //                   Navigator.of(context).pop();
-  //                 },
-  //               ),
-  //             ],
-  //           ),
-  //         );
-  //       });
-  // }
-
-  void _imgFromGallery() async {
-    final pickedImageFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    setState(() {
-      _pickedImage = File(pickedImageFile!.path);
-    });
+  _getCategoryName(int selectedIndex) {
+    return _categories[selectedIndex];
   }
 
-  Widget listCategoryItems(int index) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedIndex = index;
-          _getCategoryID(index);
-          _getCategoryColor(index);
-          _getCategoryFont(index);
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(left: 5.0),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 15.0, //20
-          vertical: 10.0, //5
-        ),
-        decoration: BoxDecoration(
-            color: selectedIndex == index
-                ? const Color(0xFFEFF3EE)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8.0)),
-        child: Text(
-          _categories[index].categoryName,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: selectedIndex == index
-                ? ThemeData.estimateBrightnessForColor(
-                            HexColor(_getCategoryColor(selectedIndex))) ==
-                        Brightness.light
-                    ? Colors.red
-                    : Colors.orange
-                : const Color(0xFFEFF3EE),
-          ),
-        ),
-      ),
-    );
+  _getRecipeName() {
+    return nameController.text;
   }
 
-  void _addTextFields() {
-    var field = TextFormField();
-    final controller = TextEditingController();
-    field = TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(20.0),
-          hintText: 'Add Ingredient',
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 15.0),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              setState(() {
-                _fields.remove(field);
-                _controllers.remove(controller);
-              });
-            },
-          )),
-    );
-
-    setState(() {
-      _controllers.add(controller);
-      _fields.add(field);
-    });
-  }
-
-  _listView() {
-    return LimitedBox(
-      child: ListView.builder(
-        itemCount: _fields.length,
-        itemBuilder: (context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(5),
-            ),
-            margin: const EdgeInsets.all(5),
-            child: _fields[index],
-          );
-        },
-      ),
-    );
+  _getRecipeDuration() {
+    return durationController.text;
   }
 
   _getRecipeIngredients() {
@@ -744,12 +721,24 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
     return ingredientList;
   }
 
+  _getRecipePreparation() {
+    return preparationController.text;
+  }
+
+  _getDifficulty() {
+    return selectedValueDiffiCulty;
+  }
+
+  _getCategoryID(int index) {
+    var catId = _categories[index].categoryId;
+
+    return catId;
+  }
+
   Future saveRecipeToServer(StateSetter bottomSheetState) async {
     String createdAt =
         DateFormat("MMM, EEE, yyyy, kk:mm").format(DateTime.now());
-    String userId = await GlobalSharedPreference.getUserID();
-    String username = await GlobalSharedPreference.getUserName();
-    String userImage = await GlobalSharedPreference.getUserImage();
+
 //"http://10.0.2.2:3000/recipes"
 
     var url = defaultTargetPlatform == TargetPlatform.android
@@ -767,21 +756,32 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
     request.fields['recipePreparation'] = _getRecipePreparation();
     request.fields['recipeCategoryname'] =
         _getCategoryName(selectedIndex).toString();
-    request.files
-        .add(await http.MultipartFile.fromPath('recipeImage', _pickedImage.path,
-            contentType: MediaType(
-              'image',
-              'jpeg',
-            )));
-    request.fields['recipeUserImagePath'] = userImage;
-    request.fields['categoryId'] = _getCategoryID(selectedIndex);
-    request.fields['userId'] = userId;
 
-    request.fields['recipeUserName'] = username;
+    kIsWeb
+        ? request.files.add(
+            http.MultipartFile.fromBytes(
+              'recipeImage',
+              webImage,
+              filename: 'image.jpg',
+              contentType: MediaType('image', 'png'),
+            ),
+          )
+        : request.files.add(
+            await http.MultipartFile.fromPath('recipeImage', mobileImage.path,
+                contentType: MediaType(
+                  'image',
+                  'jpeg',
+                )));
+
+    request.fields['recipeUserImagePath'] = userImage!;
+    request.fields['categoryId'] = _getCategoryID(selectedIndex);
+    request.fields['userId'] = id!;
+
+    request.fields['recipeUserName'] = username!;
     request.fields['createdAt'] = createdAt;
     request.fields['recipeDifficulty'] = selectedValueDiffiCulty;
-    request.fields['categoryHexColor'] = _getCategoryColor(selectedIndex);
-    request.fields['categoryGoogleFont'] = _getCategoryFont(selectedIndex);
+    // request.fields['categoryHexColor'] = _getCategoryColor(selectedIndex);
+    // request.fields['categoryGoogleFont'] = _getCategoryFont(selectedIndex);
     request.headers['Content-Type'] = "multipart/form-data";
 
     request.send().then((response) {
@@ -795,4 +795,7 @@ class _AddRecipeScreenState extends State<AddRecipePage> {
       }
     });
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

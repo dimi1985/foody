@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:foody/models/category.dart';
 import 'package:foody/models/recipe.dart';
@@ -18,6 +19,9 @@ class HttpService {
   static var recipiesEndPoint = 'recipes';
   static var baseUrlMobile = 'http://10.0.2.2:3000/';
   static var baseUrlWeb = 'http://localhost:3000/';
+  static var url = defaultTargetPlatform == TargetPlatform.android
+      ? Uri.parse(baseUrlMobile)
+      : Uri.parse(baseUrlWeb);
 
   static Future<User> registerUser({
     required String username,
@@ -174,13 +178,40 @@ class HttpService {
   //   }
   // }
 
-  static Future<Recipe> getAllRecipes(List<Recipe> recipes) async {
-    var url = defaultTargetPlatform == TargetPlatform.android
-        ? Uri.parse('$baseUrlMobile' '$recipiesEndPoint')
-        : Uri.parse('$baseUrlWeb' '$recipiesEndPoint');
+  static Future<Recipe> getAllRecipies(List<Recipe> recipes) async {
+    var postUri = Uri.parse('$url' 'recipes');
 
     final http.Response response = await http.get(
-      url,
+      postUri,
+    );
+
+    var serverResponse = response.body;
+    if (response.statusCode == 200 || response.statusCode == 304) {
+      Map<String, dynamic> map = jsonDecode(response.body);
+
+      List<dynamic> recipeData = map["recipe"];
+
+      for (var i in recipeData) {
+        recipes.add(Recipe.fromJson(i));
+      }
+
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
+    } else {
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
+    }
+  }
+
+  static Future<Recipe> getUserRecipes(List<Recipe> profileRecipes) async {
+    String userId = await GlobalSharedPreference.getUserID();
+
+    var postUri = Uri.parse('$url' 'user/recipes/$userId');
+
+    final http.Response response = await http.get(
+      postUri,
     );
 
     var serverResponse = response.body;
@@ -188,10 +219,10 @@ class HttpService {
       //var data = jsonDecode(responseData.body);
       Map<String, dynamic> map = jsonDecode(response.body);
 
-      List<dynamic> postData = map["posts"];
+      List<dynamic> recipeData = map["recipies"];
 
-      for (var i in postData) {
-        recipes.add(Recipe.fromJson(i));
+      for (var i in recipeData) {
+        profileRecipes.add(Recipe.fromJson(i));
       }
 
       return Recipe.fromJson(
@@ -312,5 +343,64 @@ class HttpService {
         jsonDecode(serverResponse),
       );
     }
+  }
+
+  static Future<CategoryModel> updateCategory(
+    String categoryId,
+    String categoryName,
+    String categoryHexColor,
+  ) async {
+    var postUri = Uri.parse('$url' 'categories/$categoryId');
+    List<Map<String, String>> updateOps = [];
+
+    updateOps.add({'propName': "categoryName", "value": categoryName});
+    updateOps.add({'propName': "categoryHexColor", "value": categoryHexColor});
+
+    http.Response response = await http.patch(postUri,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(updateOps));
+
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return CategoryModel.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return CategoryModel.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
+    }
+  }
+
+  static updateCategoryImage(
+      File pickedImage, Uint8List webImage, String categoryId) async {
+    var postUri =
+        Uri.parse('$url' 'categories/updateCategoryImage/$categoryId');
+    var request = http.MultipartRequest("PATCH", postUri);
+
+    request.headers['Content-Type'] = "multipart/form-data";
+    if (pickedImage.path.isEmpty) {}
+
+    kIsWeb
+        ? request.files.add(
+            http.MultipartFile.fromBytes(
+              'userImage',
+              webImage,
+              filename: 'image.jpg',
+              contentType: MediaType('image', 'png'),
+            ),
+          )
+        : request.files.add(
+            await http.MultipartFile.fromPath('categoryImage', pickedImage.path,
+                contentType: MediaType(
+                  'image',
+                  'jpeg',
+                )));
+
+    request.send().then((response) {
+      if (response.statusCode == 201) {}
+      return Future.value(response);
+    });
   }
 }

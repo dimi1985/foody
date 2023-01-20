@@ -246,7 +246,7 @@ class _AuthFormState extends State<AuthForm> {
   }
 
   register() {
-    var imageDummyPath = r'user-images\dummy-image\dummy-image.jpg';
+    const dummyPath = "user-images\\dummy-image\\dummy-image.png";
     String createdAt =
         DateFormat("MMM, EEE, yyyy, kk:mm").format(DateTime.now());
     String userType = 'user';
@@ -261,7 +261,7 @@ class _AuthFormState extends State<AuthForm> {
         username: usernameController.text.trim(),
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
-        imgagePath: imageDummyPath,
+        imgagePath: dummyPath,
         userType: userType,
         createdAt: createdAt,
       ).then((value) {

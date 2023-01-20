@@ -16,10 +16,9 @@ class Recipe {
   final String recipeDifficulty;
   List<String> comments;
   final String categoryHexColor;
-  final String serverMessage;
   final bool isApproved;
   final String categoryGoogleFont;
- 
+
   Recipe({
     required this.recipeId,
     required this.recipeName,
@@ -38,14 +37,13 @@ class Recipe {
     required this.recipeDifficulty,
     required this.comments,
     required this.categoryHexColor,
-    required this.serverMessage,
     required this.isApproved,
     required this.categoryGoogleFont,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
     return Recipe(
-      recipeId: json['_id'] ?? '',
+      recipeId: json['id'] ?? '',
       recipeName: json['recipeName'] ?? '',
       recipeImage: json['recipeImage'] ?? '',
       recipeCategoryname: json['recipeCategoryname'] ?? '',
@@ -68,7 +66,6 @@ class Recipe {
           ? []
           : List<String>.from(json["comments"].map((x) => x)),
       categoryHexColor: json['categoryHexColor'] ?? '',
-      serverMessage: json['message'] ?? '',
       isApproved: json['isApproved'] ?? false,
       categoryGoogleFont: json['categoryGoogleFont'] ?? '',
     );
