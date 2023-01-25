@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:foody/screens/addRecipe/add_recipe_page.dart';
+import 'package:flutter/material.dart';
+import 'package:foody/screens/dashboard/subscreen/admin_recipies.dart';
 import 'package:foody/screens/dashboard/subscreen/admin_users.dart';
 
 import 'subscreen/admin_categories.dart';
@@ -19,10 +19,12 @@ class _AdminPanelState extends State<AdminPanel> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Admin Panel'),
-            centerTitle: true,
-          ),
+          appBar: kIsWeb
+              ? null
+              : AppBar(
+                  title: const Text('Admin Panel'),
+                  centerTitle: true,
+                ),
           body: ListView(
             children: [
               GestureDetector(
@@ -53,7 +55,7 @@ class _AdminPanelState extends State<AdminPanel> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const AddRecipePage(),
+            builder: (context) => const AdminRecipes(),
           ),
         );
         break;

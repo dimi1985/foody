@@ -39,6 +39,8 @@ dependencies:
   hovering: ^1.0.4
   hexcolor: ^3.0.1
   permission_handler: ^10.2.0
+  convex_bottom_bar: ^3.1.0+1
+  side_navigation: ^1.0.4
 
 
   # The following adds the Cupertino Icons font to your application.

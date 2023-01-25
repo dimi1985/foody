@@ -1,18 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:foody/screens/category/widgets/category_card.dart';
+import 'package:foody/screens/discovery/widgets/category_card.dart';
 import 'package:foody/utils/http_service.dart';
 
 import '../../models/category.dart';
 
-class CategoryRecipePage extends StatefulWidget {
-  const CategoryRecipePage({super.key});
+class DiscoveryPage extends StatefulWidget {
+  const DiscoveryPage({super.key});
 
   @override
-  State<CategoryRecipePage> createState() => _CategoryRecipePageState();
+  State<DiscoveryPage> createState() => _DiscoveryPageState();
 }
 
-class _CategoryRecipePageState extends State<CategoryRecipePage> {
+class _DiscoveryPageState extends State<DiscoveryPage> {
   final List<CategoryModel>? categories = [];
   late Future<CategoryModel>? futureCategory;
 

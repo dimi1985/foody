@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:foody/models/category.dart';
 import 'package:foody/models/user.dart';
 import 'package:foody/utils/http_service.dart';
+import 'package:foody/utils/size_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -76,6 +77,9 @@ class _AddRecipeScreenState extends State<AddRecipePage>
     super.dispose();
   }
 
+  var toDeletefield = TextFormField();
+  var toDeletecontroller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -94,52 +98,56 @@ class _AddRecipeScreenState extends State<AddRecipePage>
                           ? size.width
                           : size.width * 0.7,
                     ),
-                    child: Card(
-                      elevation: 5,
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(
-                              height: 30,
-                            ),
-                            imageContainer(size),
-                            const SizedBox(
-                              height: 30,
-                            ),
-                            categoryList(size),
-                            const SizedBox(
-                              height: 30,
-                            ),
-                            Form(
-                              key: _formKey,
-                              child: Column(
-                                children: [
-                                  defaultTargetPlatform ==
-                                          TargetPlatform.android
-                                      ? Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            nameTextField(),
-                                            durationTextField(),
-                                          ],
-                                        )
-                                      : Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            nameTextField(),
-                                            durationTextField(),
-                                          ],
-                                        ),
-                                  difficultySelection(size),
-                                  ingredientListTextField(),
-                                  preparationTextField(),
-                                  button(size),
-                                ],
-                              ),
-                            ),
-                          ]),
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 100,
+                        ),
+                        imageContainer(size),
+                        Card(
+                          elevation: 5,
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  height: 30,
+                                ),
+                                categoryList(size),
+                                const SizedBox(
+                                  height: 30,
+                                ),
+                                Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    children: [
+                                      defaultTargetPlatform ==
+                                              TargetPlatform.android
+                                          ? Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                nameTextField(),
+                                                durationTextField(),
+                                              ],
+                                            )
+                                          : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                nameTextField(),
+                                                durationTextField(),
+                                              ],
+                                            ),
+                                      difficultySelection(size),
+                                      ingredientListTextField(),
+                                      preparationTextField(),
+                                      button(size),
+                                    ],
+                                  ),
+                                ),
+                              ]),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -158,8 +166,9 @@ class _AddRecipeScreenState extends State<AddRecipePage>
             : (kIsWeb)
                 ? Image.memory(
                     webImage,
-                    width: size.width < 600 ? 50 : 300,
-                    height: size.width < 600 ? 50 : 300,
+                    width: SizeScreen.isMobile(context) ? 50 : 300,
+                    height: SizeScreen.isMobile(context) ? 50 : 300,
+                    fit: BoxFit.cover,
                   )
                 : Image.file(
                     mobileImage,
@@ -196,7 +205,7 @@ class _AddRecipeScreenState extends State<AddRecipePage>
   }
 
   void getUserFields() {
-    getUser = HttpService.getUserById().then((value) {
+    getUser = HttpService.getUserById('').then((value) {
       setState(() {
         id = value.id;
         username = value.username;
@@ -338,15 +347,41 @@ class _AddRecipeScreenState extends State<AddRecipePage>
           children: [
             Row(children: [
               const Text('Press + to Add Recipe'),
-              IconButton(onPressed: addTextFields, icon: const Icon(Icons.add))
+              Expanded(
+                  flex: 1,
+                  child: IconButton(
+                      onPressed: addTextFields, icon: const Icon(Icons.add)))
             ]),
-            SizedBox(
-              width: 600,
-              height: 240,
-              child: ingredientlistViewTextField(),
+            Expanded(
+              flex: 1,
+              child: SizedBox(
+                width: 600,
+                height: 240,
+                child: ingredientlistViewTextField(),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget ingredientlistViewTextField() {
+    return LimitedBox(
+      maxHeight: 300,
+      child: ListView.builder(
+        itemCount: _fields.length,
+        shrinkWrap: true,
+        itemBuilder: (context, index) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(5),
+            ),
+            margin: const EdgeInsets.all(5),
+            child: _fields[index],
+          );
+        },
       ),
     );
   }
@@ -401,6 +436,10 @@ class _AddRecipeScreenState extends State<AddRecipePage>
   void addTextFields() {
     var field = TextFormField();
     final controller = TextEditingController();
+    setState(() {
+      toDeletefield = field;
+      toDeletecontroller = controller;
+    });
     field = TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -423,24 +462,6 @@ class _AddRecipeScreenState extends State<AddRecipePage>
       _controllers.add(controller);
       _fields.add(field);
     });
-  }
-
-  Widget ingredientlistViewTextField() {
-    return LimitedBox(
-      child: ListView.builder(
-        itemCount: _fields.length,
-        itemBuilder: (context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(5),
-            ),
-            margin: const EdgeInsets.all(5),
-            child: _fields[index],
-          );
-        },
-      ),
-    );
   }
 
   Widget listCategoryItems(int index) {

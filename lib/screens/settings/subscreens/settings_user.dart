@@ -18,6 +18,9 @@ class _SettingsUserState extends State<SettingsUser> {
   bool isSwitched = false;
   late Future<User> getUser;
 
+  String? loggedUserID;
+  bool isMe = false;
+
   @override
   void initState() {
     getSwitchState();
@@ -118,6 +121,14 @@ class _SettingsUserState extends State<SettingsUser> {
   }
 
   getUserProfile() {
-    getUser = HttpService.getUserById();
+    GlobalSharedPreference.getUserID().then((value) {
+      setState(() {
+        loggedUserID = value;
+        if (loggedUserID!.contains(value)) {
+          isMe = true;
+        }
+      });
+    });
+    getUser = HttpService.getUserById('');
   }
 }

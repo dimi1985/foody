@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:foody/screens/authScreen/auth_screen.dart';
-import 'package:foody/screens/homepage/home_page.dart';
+import 'package:foody/screens/homepage/landing_page.dart';
 import 'package:foody/screens/profile/profile_screen.dart';
 import 'package:foody/utils/shared_preference.dart';
 
@@ -29,12 +29,13 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepOrange,
       ),
       // home: ProfileScreen(),
-      home: isOneTimeLogin ? const Homepage() : const AuthScreen(),
+      home: isOneTimeLogin ? const Landingpage() : const AuthScreen(),
     );
   }
 

@@ -72,7 +72,8 @@ class _AdminCategoriesState extends State<AdminCategories> {
                                 radius: 25,
                                 child: ClipOval(
                                   child: Image.network(
-                                    (category.categoryImage)
+                                    '${HttpService.url}'
+                                            '${category.categoryImage}'
                                         .replaceAll(r'\', '/'),
                                     fit: BoxFit.cover,
                                     width: 60.0,
@@ -234,17 +235,18 @@ class _AdminCategoriesState extends State<AdminCategories> {
                     ),
                     TextField(
                       controller: nameController,
-                      decoration: InputDecoration(hintText: 'Category Name'),
+                      decoration:
+                          const InputDecoration(hintText: 'Category Name'),
                     ),
                     TextField(
                       controller: hexColorController,
                       decoration:
-                          InputDecoration(hintText: 'Category HexColor'),
+                          const InputDecoration(hintText: 'Category HexColor'),
                     ),
                     TextField(
                       controller: googleFontController,
-                      decoration:
-                          InputDecoration(hintText: 'Category Google Font'),
+                      decoration: const InputDecoration(
+                          hintText: 'Category Google Font'),
                     ),
                     ElevatedButton(
                       onPressed: () {

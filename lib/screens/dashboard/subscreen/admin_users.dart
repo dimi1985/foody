@@ -25,25 +25,30 @@ class _AdminUsersState extends State<AdminUsers> {
     return FutureBuilder<User>(
         future: getUser,
         builder: (context, snapshot) {
-          return SizedBox(
-            width: 400,
-            height: 400,
-            child: ListView.builder(
-                itemCount: listUsers.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  var user = listUsers[index];
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(flex: 1, child: Text('UserID: ${user.id}')),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.info_outline),
-                      ),
-                    ],
-                  );
-                }),
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Users'),
+            ),
+            body: SizedBox(
+              width: 400,
+              height: 400,
+              child: ListView.builder(
+                  itemCount: listUsers.length,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    var user = listUsers[index];
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(flex: 1, child: Text('UserID: ${user.id}')),
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.info_outline),
+                        ),
+                      ],
+                    );
+                  }),
+            ),
           );
         });
   }

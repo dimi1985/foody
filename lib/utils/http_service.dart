@@ -98,8 +98,10 @@ class HttpService {
     }
   }
 
-  static Future<User> getUserById() async {
-    String userId = await GlobalSharedPreference.getUserID();
+  static Future<User> getUserById(String userId) async {
+    if (userId.isEmpty) {
+      userId = await GlobalSharedPreference.getUserID();
+    }
 
     var url = defaultTargetPlatform == TargetPlatform.android
         ? Uri.parse('$baseUrlMobile' 'user/$userId')
@@ -205,8 +207,11 @@ class HttpService {
     }
   }
 
-  static Future<Recipe> getUserRecipes(List<Recipe> profileRecipes) async {
-    String userId = await GlobalSharedPreference.getUserID();
+  static Future<Recipe> getUserRecipes(
+      List<Recipe> profileRecipes, String userId) async {
+    if (userId.isEmpty) {
+      userId = await GlobalSharedPreference.getUserID();
+    }
 
     var postUri = Uri.parse('$url' 'user/recipes/$userId');
 
@@ -402,5 +407,27 @@ class HttpService {
       if (response.statusCode == 201) {}
       return Future.value(response);
     });
+  }
+
+  static Future<Recipe> approveRecipe(
+      String recipeId, bool booleanValue) async {
+    var uri = Uri.parse('$url' 'recipes/approveRecipe/$recipeId/$booleanValue');
+
+    final http.Response response = await http.patch(
+      uri,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{}),
+    );
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
+    }
   }
 }

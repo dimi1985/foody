@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foody/models/recipe.dart';
+import 'package:foody/screens/profile/profile_screen.dart';
 import 'package:foody/utils/http_service.dart';
 
 class RecipeDetails extends StatefulWidget {
@@ -12,185 +12,294 @@ class RecipeDetails extends StatefulWidget {
 }
 
 class _RecipeDetailsState extends State<RecipeDetails> {
-  String? recipeImage;
-
+  var top = 0.0;
+  late ScrollController controller;
+  bool isCollapsed = false;
+  String actionRoute = 'detailsPage';
   @override
   void initState() {
-    recipeImage = '${HttpService.url}'
-            '${widget.recipe.recipeImage}'
-        .replaceAll(r'\', '/');
     //List<Widget> widgets = list.map((name) => new Text(name)).toList();
+    controller = ScrollController()..addListener(onScroll);
     super.initState();
+  }
+
+  void onScroll() {
+    if (mounted) {
+      if (controller.position.pixels >= 300) {
+        setState(() {
+          isCollapsed = true;
+        });
+      } else {
+        setState(() {
+          isCollapsed = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: defaultTargetPlatform == TargetPlatform.android ? AppBar() : null,
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(
-              height: 100,
+      body: CustomScrollView(
+        controller: controller,
+        slivers: <Widget>[
+          //2
+          SliverAppBar(
+            collapsedHeight: 110,
+            expandedHeight: 350.0,
+            pinned: true,
+            flexibleSpace: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                top = constraints.biggest.height;
+                return Stack(
+                  children: <Widget>[
+                    Positioned.fill(
+                      child: Container(
+                        foregroundDecoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              Color.fromARGB(141, 28, 44, 53),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: [0, 0.7],
+                          ),
+                        ),
+                        child: Image.network(
+                          recipeImage(),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 10,
+                      left: 10,
+                      child: Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Padding(
+                          padding: top < 120
+                              ? const EdgeInsets.only(bottom: 8.0, left: 16)
+                              : const EdgeInsets.only(bottom: 8.0),
+                          child: recipeName(top),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-            //recipe title
-            Padding(
-              padding: const EdgeInsets.all(22.0),
-              child: Text(
-                widget.recipe.recipeName,
-                style: const TextStyle(
-                  fontSize: 50,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
+          ),
+
+          SliverList(
+            delegate: SliverChildListDelegate([
+              SizedBox(
+                height: size.height,
+                width: size.width,
+                child: ListView(
+                  children: ListTile.divideTiles(context: context, tiles: [
+                    ListTile(
+                      title: profileContainer(),
+                    ),
+                    ListTile(
+                      title: SizedBox(
+                        width: double.infinity,
+                        height: size.height,
+                        child: MaterialApp(
+                          debugShowCheckedModeBanner: false,
+                          theme: ThemeData(
+                            tabBarTheme: const TabBarTheme(
+                              labelColor: Colors.deepOrange,
+                              unselectedLabelColor: Colors.grey,
+                            ),
+                          ),
+                          home: DefaultTabController(
+                            length: 2,
+                            child: Scaffold(
+                              appBar: PreferredSize(
+                                preferredSize: const Size.fromHeight(50.0),
+                                child: AppBar(
+                                  elevation: 0,
+                                  backgroundColor: Colors.white10,
+                                  bottom: const TabBar(
+                                    indicatorColor: Colors.deepOrange,
+                                    tabs: [
+                                      Tab(text: 'Ingredients'),
+                                      Tab(text: 'Preparation'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              body: TabBarView(
+                                children: [ingredients(), preparation()],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ]).toList(),
                 ),
-              ),
+              )
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget profileContainer() {
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+      Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.transparent,
+            radius: 8,
+            backgroundImage: NetworkImage(
+              ('${HttpService.url}' '${widget.recipe.recipeUserImagePath}'),
             ),
-            //recipe time and duration
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+          ),
+          const SizedBox(
+            width: 5,
+          ),
+          Text(widget.recipe.recipeUserName),
+        ],
+      ),
+      const Spacer(
+        flex: 3,
+      ),
+      MaterialButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => ProfileScreen(widget.recipe.userId)),
+          );
+        },
+        child: const Text('View Profile'),
+      )
+    ]);
+  }
+
+  String recipeImage() {
+    return '${HttpService.url}'
+            '${widget.recipe.recipeImage}'
+        .replaceAll(r'\', '/');
+  }
+
+  Widget recipeName(double top) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.recipe.recipeName,
+          style: TextStyle(
+            fontSize: isCollapsed ? 10 : 30,
+            color: const Color.fromARGB(255, 68, 68, 68),
+            fontWeight: FontWeight.bold,
+          ),
+          textScaleFactor: 2,
+        ),
+        SizedBox(
+          height: isCollapsed ? 0 : 25,
+        ),
+        AnimatedOpacity(
+          opacity: isCollapsed ? 0.0 : 1.0,
+          duration: const Duration(milliseconds: 500),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(
-                        text: 'Duration: ',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      TextSpan(text: widget.recipe.recipeDuration.toString()),
-                      const TextSpan(
-                        text: ' mins',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
+                categoryName(),
+                const Spacer(
+                  flex: 2,
                 ),
-                const Text(' | '),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(
-                        text: 'Difficulty: ',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      TextSpan(text: widget.recipe.recipeDifficulty),
-                    ],
-                  ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: durationPreparation(),
                 ),
               ],
             ),
-            const SizedBox(
-              height: 30,
-            ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.7,
-              height: MediaQuery.of(context).size.height * 0.5,
-              child: size.width < 600
-                  ? SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Column(
-                            children: [
-                              Image.network(recipeImage!),
-                              const Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Text('Ingredients'),
-                              ),
-                              const SizedBox(
-                                height: 18,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  widget.recipe.ingredients
-                                      .toString()
-                                      .replaceAll("[", "")
-                                      .replaceAll("]", ""),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Text('Preparation'),
-                              ),
-                              const SizedBox(
-                                height: 18,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  widget.recipe.recipePreparation,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text('Ingredients'),
-                            ),
-                            const SizedBox(
-                              height: 18,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                widget.recipe.ingredients
-                                    .toString()
-                                    .replaceAll("[", "")
-                                    .replaceAll("]", ""),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text('Preparation'),
-                            ),
-                            const SizedBox(
-                              height: 18,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                widget.recipe.recipePreparation,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          child: Image.network(recipeImage!),
-                        ),
-                      ],
-                    ),
-            )
-          ],
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget categoryName() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.category,
+          color: Colors.deepOrange,
+        ),
+        const SizedBox(
+          width: 10,
+        ),
+        Text(
+          widget.recipe.recipeCategoryname,
+          style: const TextStyle(color: Colors.white),
+        ),
+      ],
+    );
+  }
+
+  Widget durationPreparation() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.alarm,
+          color: Colors.deepOrange,
+        ),
+        const SizedBox(
+          width: 5,
+        ),
+        Text(
+          '${widget.recipe.recipeDuration.toString()} mins',
+          style: const TextStyle(color: Colors.white),
+        ),
+      ],
+    );
+  }
+
+  Widget ingredients() {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      child: ListView.builder(
+        itemCount: widget.recipe.ingredients.length,
+        itemBuilder: (context, index) {
+          var item = widget.recipe.ingredients;
+          return ListTile(
+            title: Text(item[index]),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget preparation() {
+    return Padding(
+      //200 is putting it to center ?? check it
+      padding: const EdgeInsets.only(top: 8, left: 200),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Text(
+          widget.recipe.recipePreparation,
         ),
       ),
     );

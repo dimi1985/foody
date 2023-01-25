@@ -8,6 +8,7 @@ class User {
   final String createdAt;
   final String message;
   List<String> following;
+  List<String> recipies;
 
   User({
     required this.id,
@@ -19,6 +20,7 @@ class User {
     required this.createdAt,
     required this.message,
     required this.following,
+    required this.recipies,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,9 @@ class User {
       following: json['following'] == null
           ? []
           : List<String>.from(json["following"].map((x) => x)),
+      recipies: json['recipies'] == null
+          ? []
+          : List<String>.from(json["recipies"].map((x) => x)),
     );
   }
 
