@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:foody/models/recipe.dart';
 import 'package:foody/screens/widgets/recipe_details.dart';
 import 'package:foody/utils/http_service.dart';
+import 'package:foody/utils/shared_preference.dart';
 
 class RecipeCard extends StatefulWidget {
   final Recipe recipe;
@@ -14,6 +17,14 @@ class RecipeCard extends StatefulWidget {
 
 class _RecipeCardState extends State<RecipeCard> {
   bool isFavorite = false;
+  bool isMe = false;
+  String? loggedId;
+
+  @override
+  void initState() {
+    isItMe();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,16 +86,30 @@ class _RecipeCardState extends State<RecipeCard> {
   }
 
   Widget dateRecipeCreated() {
-    return Flexible(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          overflow: TextOverflow.ellipsis,
-          widget.recipe.createdAt,
-          style: const TextStyle(
-            color: Color.fromARGB(255, 196, 196, 196),
+    return SizedBox(
+      width: 200,
+      child: Row(
+        children: [
+          Flexible(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                overflow: TextOverflow.ellipsis,
+                widget.recipe.createdAt,
+                style: const TextStyle(
+                  color: Color.fromARGB(255, 196, 196, 196),
+                ),
+              ),
+            ),
           ),
-        ),
+          if (isMe)
+            IconButton(
+              onPressed: () {
+                showBottomMenu();
+              },
+              icon: const Icon(Icons.menu),
+            )
+        ],
       ),
     );
   }
@@ -186,6 +211,166 @@ class _RecipeCardState extends State<RecipeCard> {
               : Colors.deepOrange,
         ),
       ),
+    );
+  }
+
+  void isItMe() {
+    GlobalSharedPreference.getUserID().then((value) {
+      setState(() {
+        loggedId = value;
+      });
+      if (loggedId!.contains(widget.recipe.userId)) {
+        setState(() {
+          isMe = true;
+        });
+      }
+    });
+  }
+
+  void showBottomMenu() {
+    Scaffold.of(context).showBottomSheet<void>(
+      (BuildContext context) {
+        return SingleChildScrollView(
+          child: SizedBox(
+            height: 500,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Row(
+                    children: [
+                      const Spacer(),
+                      IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.cancel))
+                    ],
+                  ),
+                  const Center(
+                      child: Text(
+                    'Edit Recipe',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  )),
+                  const SizedBox(
+                    height: 50,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Form(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(top: 10, left: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                  color: const Color.fromARGB(255, 243, 65, 33),
+                                  width: 1),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            child: TextFormField(
+                              cursorColor:
+                                  const Color.fromARGB(255, 148, 0, 86),
+                              //  controller: usernameController,
+                              decoration: InputDecoration(
+                                labelText: widget.recipe.recipeName,
+                                // labelStyle: labelTextStyle,
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.transparent),
+                                ),
+                                enabledBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.transparent),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 25,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.only(top: 10, left: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                  color: const Color.fromARGB(255, 243, 65, 33),
+                                  width: 1),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            child: TextFormField(
+                              cursorColor:
+                                  const Color.fromARGB(255, 148, 0, 86),
+                              //  controller: usernameController,
+                              decoration: InputDecoration(
+                                labelText:
+                                    widget.recipe.recipeDuration.toString(),
+                                // labelStyle: labelTextStyle,
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.transparent),
+                                ),
+                                enabledBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.transparent),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 25,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.only(top: 10, left: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                  color: const Color.fromARGB(255, 243, 65, 33),
+                                  width: 1),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            child: TextFormField(
+                              cursorColor:
+                                  const Color.fromARGB(255, 148, 0, 86),
+                              //  controller: usernameController,
+                              decoration: InputDecoration(
+                                labelText: widget.recipe.ingredients.toString(),
+                                // labelStyle: labelTextStyle,
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.transparent),
+                                ),
+                                enabledBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.transparent),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 50,
+                  ),
+                  ElevatedButton(
+                    child: const Text('Update'),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
