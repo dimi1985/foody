@@ -6,11 +6,12 @@ class GlobalSharedPreference {
   static const userEmail = 'user_email';
   static const userImage = 'user_image';
   static const scrolltype = 'scrolltype';
-   static const initScrolltype = 'initScrolltype';
+  static const initScrolltype = 'initScrolltype';
   static const googleFont = 'googleFont';
   static const oneTimeLogin = 'oneTimeLogin';
-    static const doNotShowAlertDialogAgain = 'doNotShowAlertDialogAgain';
-
+  static const doNotShowAlertDialogAgain = 'doNotShowAlertDialogAgain';
+  static const categoryId = 'categoryId';
+  static const categoryName = 'categoryName';
   static setUserID(String value) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -113,7 +114,6 @@ class GlobalSharedPreference {
         '';
   }
 
-
   static setTempGoogleFont(String value) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     sharedPreferences.setString(googleFont, value);
@@ -166,5 +166,33 @@ class GlobalSharedPreference {
   static Future<bool> clearDoNotShowAlertDialogAgain() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     return sharedPreferences.remove(doNotShowAlertDialogAgain);
+  }
+
+  static Future<String> setCategoryID(String value) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setString(categoryId, value);
+    return value;
+  }
+
+  static Future<String> getCategoryID() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    return sharedPreferences.getString(
+          categoryId,
+        ) ??
+        '';
+  }
+
+  static Future<String> setCategoryName(String value) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setString(categoryName, value);
+    return value;
+  }
+
+  static Future<String> getCategoryName() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    return sharedPreferences.getString(
+          categoryName,
+        ) ??
+        '';
   }
 }

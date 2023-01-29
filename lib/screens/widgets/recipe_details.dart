@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:foody/models/recipe.dart';
 import 'package:foody/screens/profile/profile_screen.dart';
 import 'package:foody/utils/http_service.dart';
+import 'package:foody/utils/shared_preference.dart';
 
 class RecipeDetails extends StatefulWidget {
   final Recipe recipe;
@@ -16,10 +19,14 @@ class _RecipeDetailsState extends State<RecipeDetails> {
   late ScrollController controller;
   bool isCollapsed = false;
   String actionRoute = 'detailsPage';
+  bool isMe = false;
+  late String loggedUserId;
+  late String recipeID;
   @override
   void initState() {
     //List<Widget> widgets = list.map((name) => new Text(name)).toList();
     controller = ScrollController()..addListener(onScroll);
+    isMyRecipe();
     super.initState();
   }
 
@@ -180,7 +187,8 @@ class _RecipeDetailsState extends State<RecipeDetails> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => ProfileScreen(widget.recipe.userId)),
+                builder: (context) =>
+                    ProfileScreen(widget.recipe.userId, loggedUserId)),
           );
         },
         child: const Text('View Profile'),
@@ -295,7 +303,7 @@ class _RecipeDetailsState extends State<RecipeDetails> {
   Widget preparation() {
     return Padding(
       //200 is putting it to center ?? check it
-      padding: const EdgeInsets.only(top: 8, left: 200),
+      padding: const EdgeInsets.all(20),
       child: Align(
         alignment: Alignment.topCenter,
         child: Text(
@@ -303,5 +311,18 @@ class _RecipeDetailsState extends State<RecipeDetails> {
         ),
       ),
     );
+  }
+
+  void isMyRecipe() async {
+    GlobalSharedPreference.getUserID().then((value) {
+      setState(() {
+        loggedUserId = value;
+
+        if (widget.recipe.userId == loggedUserId) {
+          isMe = true;
+        }
+      });
+      return value;
+    });
   }
 }

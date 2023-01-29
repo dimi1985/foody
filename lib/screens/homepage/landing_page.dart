@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foody/models/menuModel.dart';
 import 'package:foody/models/user.dart';
-import 'package:foody/screens/addRecipe/add_recipe_page.dart';
+import 'package:foody/screens/addEditRecipe/add_recipe_page.dart';
 import 'package:foody/screens/discovery/discovery_page.dart';
 import 'package:foody/screens/feedpage/feed_recipe.dart';
 import 'package:foody/screens/profile/profile_screen.dart';
@@ -53,7 +53,7 @@ class _LandingState extends State<Landingpage> {
     const DiscoveryPage(),
     const AddRecipePage(),
     const TeamPage(),
-    ProfileScreen(''),
+    const ProfileScreen('', ''),
   ];
 
   bool isHovering = false;

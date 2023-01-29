@@ -8,13 +8,13 @@ import 'package:foody/screens/widgets/recipe_card.dart';
 import 'package:foody/utils/http_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:foody/utils/shared_preference.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String? id;
+  final String? id, loggedUserId;
   const ProfileScreen(
-    this.id, {
+    this.id,
+    this.loggedUserId, {
     super.key,
   });
 
@@ -44,7 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     getUserFutureRecipes = HttpService.getUserRecipes(recipes!, widget.id!);
     getUser = HttpService.getUserById(widget.id!);
 
-    if (widget.id!.isEmpty) {
+    if (widget.id == widget.loggedUserId) {
       setState(() {
         isMe = true;
       });
@@ -196,7 +196,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   );
                 }
-                return const Text('Please wait');
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
               });
         });
   }
@@ -247,33 +249,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-// Center(
-
-//             //#################Later USe For Edit####################
-//             // ClipRRect(
-//             //   child: mobileImage.path == "zz" || userImage!.isEmpty
-//             //       ? const Center(
-//             //           child: Text(
-//             //             'Please Select an Image',
-//             //             style: TextStyle(
-//             //                 color: Colors.grey,
-//             //                 fontWeight: FontWeight.w600,
-//             //                 fontSize: 16),
-//             //           ),
-//             //         )
-//             //       : (kIsWeb)
-//             //           ? Image.memory(webImage)
-//             //           : Image.file(
-//             //               mobileImage,
-//             //               fit: BoxFit.cover,
-//             //             ),
-//             // ),
-//             if (isMe)
-//               IconButton(
-//                 onPressed: pickImage,
-//                 icon: const Icon(Icons.edit),
-//               )
-//           ],
-//         ),
-//       )

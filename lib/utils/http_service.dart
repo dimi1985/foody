@@ -390,7 +390,7 @@ class HttpService {
     kIsWeb
         ? request.files.add(
             http.MultipartFile.fromBytes(
-              'userImage',
+              'categoryImage',
               webImage,
               filename: 'image.jpg',
               contentType: MediaType('image', 'png'),
@@ -407,6 +407,104 @@ class HttpService {
       if (response.statusCode == 201) {}
       return Future.value(response);
     });
+  }
+
+  static Future<Recipe> updateRecipe(
+    String recipeId,
+    String recipeName,
+    String recipeDuration,
+    String ingredients,
+    String recipePreparation,
+    String recipeCategoryname,
+    String categoryId,
+    String categoryHexColor,
+  ) async {
+    var postUri = Uri.parse('$url' 'recipes/$recipeId');
+    List<Map<String, String>> updateOps = [];
+
+    updateOps.add({'propName': "recipeName", "value": recipeName});
+    updateOps.add({'propName': "recipeDuration", "value": recipeDuration});
+    updateOps.add({'propName': "ingredients", "value": ingredients});
+    updateOps
+        .add({'propName': "recipePreparation", "value": recipePreparation});
+
+    updateOps
+        .add({'propName': "recipeCategoryname", "value": recipeCategoryname});
+    updateOps.add({'propName': "categoryId", "value": categoryId});
+    updateOps.add({'propName': "categoryHexColor", "value": categoryHexColor});
+    http.Response response = await http.patch(postUri,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(updateOps));
+
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
+    }
+  }
+
+  static updateRecipeImage(
+      File pickedImage, Uint8List webImage, String recipeId) async {
+    var postUri = Uri.parse('$url' 'recipes/updateImage/$recipeId');
+    var request = http.MultipartRequest("PATCH", postUri);
+
+    kIsWeb
+        ? request.files.add(
+            http.MultipartFile.fromBytes(
+              'recipeImage',
+              webImage,
+              filename: 'image.jpg',
+              contentType: MediaType('image', 'png'),
+            ),
+          )
+        : request.files.add(
+            await http.MultipartFile.fromPath('recipeImage', pickedImage.path,
+                contentType: MediaType(
+                  'image',
+                  'jpeg',
+                )));
+
+    request.send().then((response) {
+      if (response.statusCode == 201) {}
+      return Future.value(response);
+    });
+  }
+
+  static Future<Recipe> updateRecipeCategoryName(
+      String recipeId, String oldCategoryId, String newCategoryId) async {
+    var postUri = Uri.parse('$url'
+        'recipes/updateRecipeCategoryId/$recipeId/$oldCategoryId/$newCategoryId');
+
+    final http.Response response = await http.patch(
+      postUri,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(
+        <String, dynamic>{
+          'recipeId': recipeId,
+          'oldCategoryId': oldCategoryId,
+          'newCategoryId': newCategoryId,
+        },
+      ),
+    );
+
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    }
+    if (response.statusCode == 401) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
+    }
   }
 
   static Future<Recipe> approveRecipe(
@@ -428,6 +526,35 @@ class HttpService {
       return Recipe.fromJson(jsonDecode(serverResponse));
     } else {
       throw Exception('Error With The Server');
+    }
+  }
+
+  static Future<Recipe> getRecipesByCategory(
+      List<Recipe> recipes, String categoryID) async {
+    var uri = Uri.parse('$url' 'recipes/getRecipeByCategory/$categoryID');
+
+    final http.Response response = await http.get(
+      uri,
+    );
+
+    var serverResponse = response.body;
+    if (response.statusCode == 200) {
+      //var data = jsonDecode(responseData.body);
+      Map<String, dynamic> map = jsonDecode(response.body);
+
+      List<dynamic> recipeData = map["recipies"];
+
+      for (var i in recipeData) {
+        recipes.add(Recipe.fromJson(i));
+      }
+
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
+    } else {
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
     }
   }
 }

@@ -14,7 +14,8 @@ class _CategoryState extends State<CategoryCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 200,
+      height: 50,
+      width: 70,
       alignment: Alignment.center,
       decoration: BoxDecoration(
           image: DecorationImage(
