@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:foody/screens/authScreen/widgets/auth_form.dart';
-import 'package:foody/screens/authScreen/widgets/auth_inage.dart';
+import 'package:foody/screens/widgets/auth_form.dart';
+import 'package:foody/screens/widgets/auth_image.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});

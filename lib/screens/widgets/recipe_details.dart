@@ -2,9 +2,11 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:foody/models/recipe.dart';
-import 'package:foody/screens/profile/profile_screen.dart';
+import 'package:foody/screens/profile_screen.dart';
 import 'package:foody/utils/http_service.dart';
 import 'package:foody/utils/shared_preference.dart';
+import 'package:hexcolor/hexcolor.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class RecipeDetails extends StatefulWidget {
   final Recipe recipe;
@@ -22,11 +24,15 @@ class _RecipeDetailsState extends State<RecipeDetails> {
   bool isMe = false;
   late String loggedUserId;
   late String recipeID;
+  List finalIngredients = [];
+
   @override
   void initState() {
     //List<Widget> widgets = list.map((name) => new Text(name)).toList();
     controller = ScrollController()..addListener(onScroll);
     isMyRecipe();
+    String joinedList = widget.recipe.ingredients.join(', ');
+    finalIngredients = joinedList.split(',');
     super.initState();
   }
 
@@ -54,214 +60,200 @@ class _RecipeDetailsState extends State<RecipeDetails> {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
-      body: CustomScrollView(
-        controller: controller,
-        slivers: <Widget>[
-          //2
-          SliverAppBar(
-            collapsedHeight: 110,
-            expandedHeight: 350.0,
-            pinned: true,
-            flexibleSpace: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                top = constraints.biggest.height;
-                return Stack(
-                  children: <Widget>[
-                    Positioned.fill(
-                      child: Container(
-                        foregroundDecoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              Color.fromARGB(141, 28, 44, 53),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            stops: [0, 0.7],
-                          ),
-                        ),
-                        child: Image.network(
-                          recipeImage(),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 10,
-                      left: 10,
-                      child: Align(
-                        alignment: Alignment.bottomLeft,
-                        child: Padding(
-                          padding: top < 120
-                              ? const EdgeInsets.only(bottom: 8.0, left: 16)
-                              : const EdgeInsets.only(bottom: 8.0),
-                          child: recipeName(top),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-
-          SliverList(
-            delegate: SliverChildListDelegate([
-              SizedBox(
-                height: size.height,
-                width: size.width,
-                child: ListView(
-                  children: ListTile.divideTiles(context: context, tiles: [
-                    ListTile(
-                      title: profileContainer(),
-                    ),
-                    ListTile(
-                      title: SizedBox(
-                        width: double.infinity,
-                        height: size.height,
-                        child: MaterialApp(
-                          debugShowCheckedModeBanner: false,
-                          theme: ThemeData(
-                            tabBarTheme: const TabBarTheme(
-                              labelColor: Colors.deepOrange,
-                              unselectedLabelColor: Colors.grey,
-                            ),
-                          ),
-                          home: DefaultTabController(
-                            length: 2,
-                            child: Scaffold(
-                              appBar: PreferredSize(
-                                preferredSize: const Size.fromHeight(50.0),
-                                child: AppBar(
-                                  elevation: 0,
-                                  backgroundColor: Colors.white10,
-                                  bottom: const TabBar(
-                                    indicatorColor: Colors.deepOrange,
-                                    tabs: [
-                                      Tab(text: 'Ingredients'),
-                                      Tab(text: 'Preparation'),
-                                    ],
+      body: Stack(
+        children: <Widget>[
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Image.network(
+                  recipeImage(),
+                  height: 400,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(
+                  height: 30,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ProfileScreen(
+                                          widget.recipe.userId, loggedUserId)));
+                            },
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: Colors.transparent,
+                                  radius: 8,
+                                  backgroundImage: NetworkImage(
+                                    ('${HttpService.url}'
+                                        '${widget.recipe.recipeUserImagePath}'),
                                   ),
                                 ),
-                              ),
-                              body: TabBarView(
-                                children: [ingredients(), preparation()],
-                              ),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                Text(
+                                  widget.recipe.recipeUserName,
+                                  style: TextStyle(
+                                      fontFamily: GoogleFonts.getFont(
+                                              widget.recipe.categoryGoogleFont)
+                                          .fontFamily),
+                                ),
+                              ],
                             ),
                           ),
+                          const SizedBox(
+                            height: 14,
+                          ),
+                          Text(
+                            widget.recipe.recipeName,
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: GoogleFonts.getFont(
+                                        widget.recipe.categoryGoogleFont)
+                                    .fontFamily),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 40,
+                        child: Text(
+                          widget.recipe.recipeCategoryname,
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: HexColor(widget.recipe.categoryHexColor),
+                              fontWeight: FontWeight.bold,
+                              fontFamily: GoogleFonts.getFont(
+                                      widget.recipe.categoryGoogleFont)
+                                  .fontFamily),
                         ),
                       ),
-                    ),
-                  ]).toList(),
+                    ],
+                  ),
                 ),
-              )
-            ]),
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: Text(
+                    widget.recipe.createdAt,
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        fontFamily: GoogleFonts.getFont(
+                                widget.recipe.categoryGoogleFont)
+                            .fontFamily),
+                  ),
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
+                Divider(
+                  color: Colors.grey.shade500,
+                  height: 1,
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
+                  child: Text(
+                    "INGREDIENTS",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade700,
+                        fontFamily: GoogleFonts.getFont(
+                                widget.recipe.categoryGoogleFont)
+                            .fontFamily),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: ingredients(size),
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: Text(
+                    "DESCRIPTION",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade700,
+                        fontFamily: GoogleFonts.getFont(
+                                widget.recipe.categoryGoogleFont)
+                            .fontFamily),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: Text(
+                    widget.recipe.recipePreparation,
+                    style: TextStyle(
+                        fontFamily: GoogleFonts.getFont(
+                                widget.recipe.categoryGoogleFont)
+                            .fontFamily),
+                  ),
+                ),
+              ],
+            ),
           ),
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16, top: 40),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    color: Colors.black87.withOpacity(0.7),
+                  ),
+                  padding: const EdgeInsets.all(10),
+                  child: const Icon(
+                    Icons.arrow_back_ios,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );
-  }
-
-  Widget profileContainer() {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-      Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.transparent,
-            radius: 8,
-            backgroundImage: NetworkImage(
-              ('${HttpService.url}' '${widget.recipe.recipeUserImagePath}'),
-            ),
-          ),
-          const SizedBox(
-            width: 5,
-          ),
-          Text(widget.recipe.recipeUserName),
-        ],
-      ),
-      const Spacer(
-        flex: 3,
-      ),
-      MaterialButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    ProfileScreen(widget.recipe.userId, loggedUserId)),
-          );
-        },
-        child: const Text('View Profile'),
-      )
-    ]);
   }
 
   String recipeImage() {
     return '${HttpService.url}'
             '${widget.recipe.recipeImage}'
         .replaceAll(r'\', '/');
-  }
-
-  Widget recipeName(double top) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.recipe.recipeName,
-          style: TextStyle(
-            fontSize: isCollapsed ? 10 : 30,
-            color: const Color.fromARGB(255, 68, 68, 68),
-            fontWeight: FontWeight.bold,
-          ),
-          textScaleFactor: 2,
-        ),
-        SizedBox(
-          height: isCollapsed ? 0 : 25,
-        ),
-        AnimatedOpacity(
-          opacity: isCollapsed ? 0.0 : 1.0,
-          duration: const Duration(milliseconds: 500),
-          child: SizedBox(
-            width: MediaQuery.of(context).size.width,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                categoryName(),
-                const Spacer(
-                  flex: 2,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 15),
-                  child: durationPreparation(),
-                ),
-              ],
-            ),
-          ),
-        )
-      ],
-    );
-  }
-
-  Widget categoryName() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const Icon(
-          Icons.category,
-          color: Colors.deepOrange,
-        ),
-        const SizedBox(
-          width: 10,
-        ),
-        Text(
-          widget.recipe.recipeCategoryname,
-          style: const TextStyle(color: Colors.white),
-        ),
-      ],
-    );
   }
 
   Widget durationPreparation() {
@@ -285,30 +277,23 @@ class _RecipeDetailsState extends State<RecipeDetails> {
     );
   }
 
-  Widget ingredients() {
+  Widget ingredients(Size size) {
     return SizedBox(
-      height: MediaQuery.of(context).size.height,
+      height: size.height / 4,
       child: ListView.builder(
-        itemCount: widget.recipe.ingredients.length,
+        itemCount: finalIngredients.length,
         itemBuilder: (context, index) {
-          var item = widget.recipe.ingredients;
+          var ingredient = finalIngredients[index];
           return ListTile(
-            title: Text(item[index]),
+            title: Text(
+              ingredient,
+              style: TextStyle(
+                  fontFamily:
+                      GoogleFonts.getFont(widget.recipe.categoryGoogleFont)
+                          .fontFamily),
+            ),
           );
         },
-      ),
-    );
-  }
-
-  Widget preparation() {
-    return Padding(
-      //200 is putting it to center ?? check it
-      padding: const EdgeInsets.all(20),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Text(
-          widget.recipe.recipePreparation,
-        ),
       ),
     );
   }

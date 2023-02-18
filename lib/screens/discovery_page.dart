@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:foody/models/recipe.dart';
-import 'package:foody/screens/discovery/widgets/category_card.dart';
-import 'package:foody/screens/recipeByCategoryPage/recipe_by_category_page.dart';
+import 'package:foody/screens/widgets/category_card.dart';
+import 'package:foody/screens/recipe_by_category_page.dart';
 import 'package:foody/screens/widgets/recipe_card.dart';
 import 'package:foody/utils/custom_scroll_behavior.dart';
 import 'package:foody/utils/http_service.dart';
 
-import '../../models/category.dart';
+import '../models/category.dart';
 
 class DiscoveryPage extends StatefulWidget {
   const DiscoveryPage({super.key});
@@ -51,7 +51,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                   padding: const EdgeInsets.all(16.0),
                   child: SizedBox(
                     width: size.width,
-                    height: size.height * 0.5 / 2,
+                    height: size.height * 0.3 / 2,
                     child: Center(
                       child: ScrollConfiguration(
                         behavior: MyCustomScrollBehavior(),
@@ -95,12 +95,14 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: FutureBuilder<Recipe>(
-                      future: futureRecipe,
-                      builder: ((context, snapshot) {
-                        return ScrollConfiguration(
-                          behavior: MyCustomScrollBehavior(),
+                FutureBuilder<Recipe>(
+                    future: futureRecipe,
+                    builder: ((context, snapshot) {
+                      return ScrollConfiguration(
+                        behavior: MyCustomScrollBehavior(),
+                        child: SizedBox(
+                          height: size.height / 2.5,
+                          width: size.width,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: recipes!.length,
@@ -108,10 +110,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                             itemBuilder: ((context, index) {
                               var recipe = recipes![index];
                               return SizedBox(
-                                height: size.height,
-                                width: size.width,
-                                child: RecipeCard(recipe),
-                              );
+                                  height: size.height,
+                                  width: size.width / 2,
+                                  child: RecipeCard(recipe));
                             }),
                             separatorBuilder:
                                 (BuildContext context, int index) {
@@ -120,56 +121,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                               );
                             },
                           ),
-                        );
-                      })),
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      'Latest Users',
-                      style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: FutureBuilder<Recipe>(
-                      future: futureRecipe,
-                      builder: ((context, snapshot) {
-                        return ScrollConfiguration(
-                          behavior: MyCustomScrollBehavior(),
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: uniqueRecipelist.length,
-                            shrinkWrap: true,
-                            itemBuilder: ((context, index) {
-                              var uniqueRecipelistItem =
-                                  uniqueRecipelist[index];
-                              return SizedBox(
-                                height: size.height / 2,
-                                width: size.width / 3,
-                                child: Container(
-                                  decoration:
-                                      const BoxDecoration(color: Colors.white),
-                                  child:
-                                      Text(uniqueRecipelistItem.recipeUserName),
-                                ),
-                              );
-                            }),
-                            separatorBuilder:
-                                (BuildContext context, int index) {
-                              return const SizedBox(
-                                width: 15,
-                              );
-                            },
-                          ),
-                        );
-                      })),
-                ),
+                        ),
+                      );
+                    })),
               ],
             ));
           }),

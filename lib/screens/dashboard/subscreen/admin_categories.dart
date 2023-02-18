@@ -1,23 +1,29 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foody/models/category.dart';
+import 'package:foody/models/recipe.dart';
 import 'package:foody/utils/http_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class AdminCategories extends StatefulWidget {
-  const AdminCategories({super.key});
+  final CategoryModel? category;
+  final List<CategoryModel> listCategories;
+  final List<Recipe> listRecipies;
+
+  const AdminCategories(this.category, this.listCategories, this.listRecipies,
+      {super.key});
 
   @override
   State<AdminCategories> createState() => _AdminCategoriesState();
 }
 
 class _AdminCategoriesState extends State<AdminCategories> {
-  late Future<CategoryModel> getCategories;
-  List<CategoryModel> listCategories = [];
   bool isLoading = false;
   bool isUploaded = false;
 
@@ -29,46 +35,31 @@ class _AdminCategoriesState extends State<AdminCategories> {
   Uint8List webImage = Uint8List(10);
 
   @override
-  void initState() {
-    getAllCategories();
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return Scaffold(
-      appBar: AppBar(),
-      body: FutureBuilder<CategoryModel>(
-        future: getCategories,
-        builder: (context, snapshot) {
-          return listCategories.isEmpty
-              ? Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text('No Data'),
-                      ElevatedButton(
-                        onPressed: (() => _showAddCatBottomSheet(size)),
-                        child: const Text('Add Category'),
-                      )
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  physics: const ScrollPhysics(),
-                  child: Column(
-                    children: [
-                      ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: listCategories.length,
-                          itemBuilder: (context, index) {
-                            var category = listCategories[index];
 
-                            return ListTile(
-                              leading: CircleAvatar(
+    return Scaffold(
+        appBar: AppBar(),
+        body: SingleChildScrollView(
+          physics: const ScrollPhysics(),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: widget.listCategories.length,
+                  itemBuilder: (context, index) {
+                    var category = widget.listCategories[index];
+                    return SizedBox(
+                      height: 120,
+                      child: Card(
+                        elevation: 2,
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              CircleAvatar(
                                 radius: 25,
                                 child: ClipOval(
                                   child: Image.network(
@@ -94,70 +85,70 @@ class _AdminCategoriesState extends State<AdminCategories> {
                                   ),
                                 ),
                               ),
-                              title: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    Container(
-                                      margin: const EdgeInsets.all(8.0),
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Text(
-                                        category.categoryName,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.info_outline,
-                                        size: 30,
-                                        color: Colors.blueGrey,
-                                      ),
-                                      onPressed: () {
-                                        _showCategoryDetailsBottomSheet(
-                                            listCategories,
-                                            index,
-                                            category.categoryId);
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit_outlined,
-                                        size: 30,
-                                        color: Colors.blueGrey,
-                                      ),
-                                      onPressed: () {
-                                        _showEditCatBottomSheet(listCategories,
-                                            index, category, size);
-                                      },
-                                    )
-                                  ]),
-                            );
-                          }),
-                      ElevatedButton(
-                        style: ButtonStyle(
-                          elevation: MaterialStateProperty.all(0),
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.black),
-                        ),
-                        onPressed: () {
-                          _showAddCatBottomSheet(size);
-                        },
-                        child: const Text('Add Category'),
-                      )
-                    ],
-                  ),
-                );
-        },
-      ),
-    );
+                              Container(
+                                margin: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(3.0),
+                                child: Text(
+                                  category.categoryName,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.info_outline,
+                                  size: 30,
+                                  color: Colors.blueGrey,
+                                ),
+                                onPressed: () {
+                                  _showCategoryDetailsBottomSheet(
+                                      widget.listCategories,
+                                      index,
+                                      category,
+                                      size);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  size: 30,
+                                  color: Colors.blueGrey,
+                                ),
+                                onPressed: () {
+                                  _showEditAddCatBottomSheet(
+                                      widget.listCategories, category, size);
+                                },
+                              )
+                            ]),
+                      ),
+                    );
+                  },
+                  separatorBuilder: (BuildContext context, int index) {
+                    return const SizedBox(
+                      height: 20,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              ElevatedButton(
+                style: ButtonStyle(
+                  elevation: MaterialStateProperty.all(0),
+                  backgroundColor: MaterialStateProperty.all(Colors.black),
+                ),
+                onPressed: () {
+                  _showEditAddCatBottomSheet(
+                      widget.listCategories, widget.category!, size);
+                },
+                child: const Text('Add Category'),
+              )
+            ],
+          ),
+        ));
   }
 
-  getAllCategories() {
-    getCategories = HttpService.getAllCategories(listCategories).then((value) {
-      return Future.value(value);
-    });
-  }
-
-  Future _showEditCatBottomSheet(categories, int index, category, Size size) {
+  Future _showEditAddCatBottomSheet(
+      List categories, CategoryModel category, Size size) {
     return showModalBottomSheet(
         isScrollControlled: true,
         shape: const RoundedRectangleBorder(
@@ -182,20 +173,34 @@ class _AdminCategoriesState extends State<AdminCategories> {
                       ),
                       TextField(
                         controller: nameController = TextEditingController()
-                          ..text = categories[index].categoryName,
+                          ..text = category.categoryId.isEmpty
+                              ? ''
+                              : category.categoryName,
                       ),
                       TextField(
                         controller: hexColorController = TextEditingController()
-                          ..text = categories[index].categoryHexColor,
+                          ..text = category.categoryId.isEmpty
+                              ? ''
+                              : category.categoryHexColor,
                       ),
                       TextField(
                         controller:
                             googleFontController = TextEditingController()
-                              ..text = categories[index].categoryGoogleFont,
+                              ..text = category.categoryId.isEmpty
+                                  ? ''
+                                  : category.categoryGoogleFont,
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          updateToServer(setState, category);
+                          category.categoryId.isEmpty
+                              ? saveToServer(setState).whenComplete(() {
+                                  if (!isLoading && isUploaded) {
+                                    setState(() {
+                                      Navigator.pop(context);
+                                    });
+                                  }
+                                })
+                              : updateToServer(setState, category);
                         },
                         child: isLoading
                             ? const CircularProgressIndicator()
@@ -212,7 +217,8 @@ class _AdminCategoriesState extends State<AdminCategories> {
         });
   }
 
-  Future _showAddCatBottomSheet(Size size) {
+  _showCategoryDetailsBottomSheet(
+      categories, int index, CategoryModel category, Size size) {
     return showModalBottomSheet(
         isScrollControlled: true,
         shape: const RoundedRectangleBorder(
@@ -221,59 +227,38 @@ class _AdminCategoriesState extends State<AdminCategories> {
         builder: (context) {
           return StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
-            return Padding(
-              padding: MediaQuery.of(context).viewInsets,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.6,
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [imageContainer(size, setState)],
-                    ),
-                    TextField(
-                      controller: nameController,
-                      decoration:
-                          const InputDecoration(hintText: 'Category Name'),
-                    ),
-                    TextField(
-                      controller: hexColorController,
-                      decoration:
-                          const InputDecoration(hintText: 'Category HexColor'),
-                    ),
-                    TextField(
-                      controller: googleFontController,
-                      decoration: const InputDecoration(
-                          hintText: 'Category Google Font'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        saveToServer(setState).whenComplete(() {
-                          if (!isLoading && isUploaded) {
-                            setState(() {
-                              Navigator.pop(context);
-                            });
-                          }
-                        });
-                      },
-                      child: isLoading
-                          ? const CircularProgressIndicator()
-                          : isUploaded
-                              ? const Icon(Icons.check)
-                              : const Text('Submit'),
-                    )
-                  ],
+            return SingleChildScrollView(
+              child: Padding(
+                padding: MediaQuery.of(context).viewInsets,
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.network('${HttpService.url}'
+                                    '${category.categoryImage}'
+                                .replaceAll(r'\', '/')),
+                            Text(category.categoryName),
+                            Text(category.categoryId),
+                            Text(
+                                'Total Recipes: ${widget.listRecipies.length.toString()}')
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           });
         }).whenComplete(() {});
   }
-
-  void _showCategoryDetailsBottomSheet(
-      categories, int index, String categoryId) {}
 
   saveToServer(StateSetter setState) async {
     var postUri =
@@ -290,12 +275,15 @@ class _AdminCategoriesState extends State<AdminCategories> {
               contentType: MediaType('image', 'png'),
             ),
           )
-        : request.files.add(
-            await http.MultipartFile.fromPath('categoryImage', mobileImage.path,
-                contentType: MediaType(
-                  'image',
-                  'jpeg',
-                )));
+        : request.files.add(await http.MultipartFile.fromPath(
+            'categoryImage',
+            mobileImage.path.isEmpty
+                ? widget.category!.categoryImage
+                : mobileImage.path,
+            contentType: MediaType(
+              'image',
+              'jpeg',
+            )));
 
     request.fields['categoryName'] = nameController.text.trim();
     request.fields['categoryHexColor'] = hexColorController.text.trim();
@@ -342,7 +330,7 @@ class _AdminCategoriesState extends State<AdminCategories> {
             style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
             ),
-            onPressed: () => selectImage(),
+            onPressed: () => selectImage(setState),
             child: Text(
               "Select Image",
               style: TextStyle(fontSize: size.width < 600 ? 12 : 16),
@@ -353,7 +341,7 @@ class _AdminCategoriesState extends State<AdminCategories> {
     );
   }
 
-  selectImage() async {
+  selectImage(StateSetter setState) async {
     // MOBILE
     if (!kIsWeb) {
       final ImagePicker picker = ImagePicker();
@@ -387,7 +375,7 @@ class _AdminCategoriesState extends State<AdminCategories> {
     }
   }
 
-  Future updateToServer(StateSetter setState, category) {
+  Future updateToServer(StateSetter setState, CategoryModel category) {
     setState(() {
       isLoading = true;
       isUploaded = false;

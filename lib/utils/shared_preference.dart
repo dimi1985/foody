@@ -12,6 +12,7 @@ class GlobalSharedPreference {
   static const doNotShowAlertDialogAgain = 'doNotShowAlertDialogAgain';
   static const categoryId = 'categoryId';
   static const categoryName = 'categoryName';
+  static const THEME_STATUS = "THEMESTATUS";
   static setUserID(String value) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -194,5 +195,15 @@ class GlobalSharedPreference {
           categoryName,
         ) ??
         '';
+  }
+
+  setDarkTheme(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool(THEME_STATUS, value);
+  }
+
+  Future<bool> getTheme() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(THEME_STATUS) ?? false;
   }
 }

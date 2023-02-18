@@ -1,7 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:foody/models/category.dart';
+import 'package:foody/models/recipe.dart';
+import 'package:foody/models/user.dart';
 import 'package:foody/screens/dashboard/subscreen/admin_recipies.dart';
 import 'package:foody/screens/dashboard/subscreen/admin_users.dart';
+import 'package:foody/utils/http_service.dart';
 
 import 'subscreen/admin_categories.dart';
 
@@ -13,8 +19,25 @@ class AdminPanel extends StatefulWidget {
 }
 
 class _AdminPanelState extends State<AdminPanel> {
+  late Future<User> getUser;
+  List<User> listUsers = [];
+  final List<Recipe> listRecipies = [];
+  late Future<Recipe> getFutureRecipes;
+  late Future<CategoryModel> getCategories;
+  List<CategoryModel> listCategories = [];
   TextStyle globalTextSyle =
       const TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
+
+  late Recipe recipe;
+
+  @override
+  void initState() {
+    getAllUsers();
+    getAllRecipies();
+    getAllCategories();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -25,48 +48,174 @@ class _AdminPanelState extends State<AdminPanel> {
                   title: const Text('Admin Panel'),
                   centerTitle: true,
                 ),
-          body: ListView(
-            children: [
-              GestureDetector(
-                  onTap: () => _gotToPanels('Users'),
-                  child: const ListTile(title: Text('Users'))),
-              GestureDetector(
-                  onTap: () => _gotToPanels('Recipes'),
-                  child: const ListTile(title: Text('Recipes'))),
-              GestureDetector(
-                  onTap: () => _gotToPanels('Categories'),
-                  child: const ListTile(title: Text('Categories')))
-            ],
+          body: Center(
+            child: SizedBox(
+              width: 600,
+              height: 500,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: cardUsers(),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Expanded(
+                    child: cardRecipes(),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Expanded(
+                    child: cardCategories(),
+                  )
+                ],
+              ),
+            ),
           )),
     );
   }
 
-  _gotToPanels(String action) {
-    switch (action) {
-      case 'Users':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminUsers(),
-          ),
-        );
-        break;
-      case 'Recipes':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AdminRecipes(),
-          ),
-        );
-        break;
-      case 'Categories':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AdminCategories(),
-          ),
-        );
-        break;
-    }
+  Widget cardUsers() {
+    return FutureBuilder<User>(
+        future: getUser,
+        builder: (context, snapshot) {
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AdminUsers(snapshot.data, listUsers),
+                ),
+              );
+            },
+            child: SizedBox(
+              height: 250,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                child: Column(
+                  children: [
+                    const Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text('Users'),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 50,
+                    ),
+                    Text('Total users: ${listUsers.length.toString()}')
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget cardRecipes() {
+    return FutureBuilder<Recipe>(
+        future: getFutureRecipes,
+        builder: (context, snapshot) {
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AdminRecipes(snapshot.data, listRecipies),
+                ),
+              );
+            },
+            child: SizedBox(
+              height: 250,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                child: Column(
+                  children: [
+                    const Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text('Recipies'),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 50,
+                    ),
+                    Text('Total recipies: ${listRecipies.length.toString()}')
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget cardCategories() {
+    return FutureBuilder<CategoryModel>(
+        future: getCategories,
+        builder: (context, snapshot) {
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AdminCategories(
+                      snapshot.data, listCategories, listRecipies),
+                ),
+              );
+            },
+            child: SizedBox(
+              height: 250,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                child: Column(
+                  children: [
+                    const Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text('Categories'),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 50,
+                    ),
+                    Text(
+                        'Total categories: ${listCategories.length.toString()}')
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
+  getAllUsers() async {
+    getUser = HttpService.getAllUsers(listUsers).then((value) {
+      return Future.value(value);
+    });
+  }
+
+  getAllRecipies() async {
+    getFutureRecipes =
+        HttpService.getRecipiesSortBy(listRecipies).then((value) {
+      return Future.value(value);
+    });
+  }
+
+  getAllCategories() async {
+    getCategories = HttpService.getAllCategories(listCategories).then((value) {
+      return Future.value(value);
+    });
   }
 }

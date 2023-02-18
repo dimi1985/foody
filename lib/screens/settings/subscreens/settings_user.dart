@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:foody/models/user.dart';
-import 'package:foody/screens/authScreen/auth_screen.dart';
+import 'package:foody/screens/auth_screen.dart';
 import 'package:foody/utils/http_service.dart';
 import 'package:foody/utils/shared_preference.dart';
 

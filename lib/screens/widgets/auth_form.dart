@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:foody/screens/homepage/landing_page.dart';
+import 'package:foody/screens/landing_page.dart';
 import 'package:foody/utils/http_service.dart';
 import 'package:foody/utils/shared_preference.dart';
 import 'package:intl/intl.dart';

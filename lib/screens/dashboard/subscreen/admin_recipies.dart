@@ -1,49 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:foody/models/recipe.dart';
+import 'package:foody/models/user.dart';
 import 'package:foody/screens/dashboard/widgets/admin_card.dart';
 import 'package:foody/utils/http_service.dart';
 
 class AdminRecipes extends StatefulWidget {
-  const AdminRecipes({super.key});
+  final Recipe? data;
+  final List<Recipe> listRecipies;
+  const AdminRecipes(this.data, this.listRecipies, {super.key});
 
   @override
   State<AdminRecipes> createState() => _AdminRecipesState();
 }
 
 class _AdminRecipesState extends State<AdminRecipes> {
-  final List<Recipe> _adminRecipies = [];
-  late Future<Recipe> _futureRecipe;
-
-  @override
-  void initState() {
-    _futureRecipe = HttpService.getAllRecipies(_adminRecipies);
-
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: FutureBuilder(
-        future: _futureRecipe,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-                itemCount: _adminRecipies.length,
-                itemBuilder: (context, index) {
-                  var recipe = _adminRecipies[index];
+        appBar: AppBar(),
+        body: ListView.builder(
+            itemCount: widget.listRecipies.length,
+            itemBuilder: (context, index) {
+              var recipe = widget.listRecipies[index];
 
-                  return AdminRecipesCard(recipe, _adminRecipies);
-                });
-          }
-
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      ),
-    );
+              return AdminRecipesCard(recipe, widget.listRecipies);
+            }));
   }
 
   // _showBottoSheet(

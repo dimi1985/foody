@@ -413,18 +413,19 @@ class HttpService {
     String recipeId,
     String recipeName,
     String recipeDuration,
-    String ingredients,
+    String? ingredients,
     String recipePreparation,
     String recipeCategoryname,
     String categoryId,
     String categoryHexColor,
+    String categoryGoogleFont,
   ) async {
     var postUri = Uri.parse('$url' 'recipes/$recipeId');
     List<Map<String, String>> updateOps = [];
 
     updateOps.add({'propName': "recipeName", "value": recipeName});
     updateOps.add({'propName': "recipeDuration", "value": recipeDuration});
-    updateOps.add({'propName': "ingredients", "value": ingredients});
+    updateOps.add({'propName': "ingredients", "value": ingredients!});
     updateOps
         .add({'propName': "recipePreparation", "value": recipePreparation});
 
@@ -432,6 +433,8 @@ class HttpService {
         .add({'propName': "recipeCategoryname", "value": recipeCategoryname});
     updateOps.add({'propName': "categoryId", "value": categoryId});
     updateOps.add({'propName': "categoryHexColor", "value": categoryHexColor});
+    updateOps
+        .add({'propName': "categoryGoogleFont", "value": categoryGoogleFont});
     http.Response response = await http.patch(postUri,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -445,7 +448,37 @@ class HttpService {
     } else if (response.statusCode == 401) {
       return Recipe.fromJson(jsonDecode(serverResponse));
     } else {
-      throw Exception('Error With The Server');
+      throw Exception('Error With The Server: $serverResponse');
+    }
+  }
+
+  static Future<Recipe> updateRecipeCategory(
+    String recipeId,
+    String categoryId,
+    String categoryHexColor,
+    String categoryGoogleFont,
+  ) async {
+    var postUri = Uri.parse('$url' 'recipes/$recipeId');
+    List<Map<String, String>> updateOps = [];
+
+    updateOps.add({'propName': "categoryId", "value": categoryId});
+    updateOps.add({'propName': "categoryHexColor", "value": categoryHexColor});
+    updateOps
+        .add({'propName': "categoryGoogleFont", "value": categoryGoogleFont});
+    http.Response response = await http.patch(postUri,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(updateOps));
+
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server: $serverResponse');
     }
   }
 
@@ -555,6 +588,121 @@ class HttpService {
       return Recipe.fromJson(
         jsonDecode(serverResponse),
       );
+    }
+  }
+
+  static Future<User> sendUserFollow(String userA, String userB) async {
+    var uri = Uri.parse('$url' 'user/userFollow/$userA/$userB');
+
+    final http.Response response = await http.patch(
+      uri,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{}),
+    );
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return User.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
+    }
+  }
+
+  static Future<Recipe> getRecipiesSortBy(List<Recipe> mainRecipies) async {
+    var uri = Uri.parse('$url' 'recipes/sortby');
+
+    final http.Response response = await http.get(
+      uri,
+    );
+
+    var serverResponse = response.body;
+    if (response.statusCode == 200) {
+      //var data = jsonDecode(responseData.body);
+      Map<String, dynamic> map = jsonDecode(response.body);
+
+      List<dynamic> recipeData = map["recipe"];
+
+      for (var i in recipeData) {
+        mainRecipies.add(Recipe.fromJson(i));
+      }
+
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
+    } else {
+      return Recipe.fromJson(
+        jsonDecode(serverResponse),
+      );
+    }
+  }
+
+  static Future<User> sendUserUnFollow(String userA, String userB) async {
+    var uri = Uri.parse('$url' 'user/userUnfollow/$userA/$userB');
+
+    final http.Response response = await http.patch(
+      uri,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{}),
+    );
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return User.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
+    }
+  }
+
+  static Future<Recipe> likeRecipe(
+      String recipeId, String user, bool booleanValue) async {
+    var uri =
+        Uri.parse('$url' 'recipes/likeRecipe/$recipeId/$user/$booleanValue');
+//    print('from hhtp url: $url');
+
+    final http.Response response = await http.patch(
+      uri,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{}),
+    );
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
+    }
+  }
+
+  static Future<Recipe> dislikeRecipe(String recipeId, String user) async {
+    var uri = Uri.parse('$url' 'recipes/dislikeRecipe/$recipeId/$user');
+
+    final http.Response response = await http.patch(
+      uri,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{}),
+    );
+    var serverResponse = response.body;
+
+    if (response.statusCode == 200) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else if (response.statusCode == 401) {
+      return Recipe.fromJson(jsonDecode(serverResponse));
+    } else {
+      throw Exception('Error With The Server');
     }
   }
 }

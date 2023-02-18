@@ -3,8 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foody/models/category.dart';
 import 'package:foody/models/user.dart';
+import 'package:foody/utils/custom_scroll_behavior.dart';
 import 'package:foody/utils/http_service.dart';
+import 'package:foody/utils/shared_preference.dart';
 import 'package:foody/utils/size_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:hexcolor/hexcolor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -20,9 +24,9 @@ class AddRecipePage extends StatefulWidget {
 
 class _AddRecipeScreenState extends State<AddRecipePage>
     with AutomaticKeepAliveClientMixin {
-  final List<CategoryModel> _categories = [];
-  late Future<CategoryModel> _futureCategory;
-  final _formKey = GlobalKey<FormState>();
+  final List<CategoryModel> categories = [];
+  late Future<CategoryModel> futureCategory;
+
   final nameController = TextEditingController();
   final durationController = TextEditingController();
   final preparationController = TextEditingController();
@@ -57,6 +61,8 @@ class _AddRecipeScreenState extends State<AddRecipePage>
   String? userImage;
   String? userType;
 
+  ScrollController scrollController = ScrollController();
+
   @override
   void initState() {
     getGategorieList();
@@ -79,77 +85,265 @@ class _AddRecipeScreenState extends State<AddRecipePage>
 
   var toDeletefield = TextFormField();
   var toDeletecontroller = TextEditingController();
+  final textFormFieldKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
     Size size = MediaQuery.of(context).size;
     return FutureBuilder<CategoryModel>(
-        future: _futureCategory,
+        future: futureCategory,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             Size size = MediaQuery.of(context).size;
             return Scaffold(
-              body: Center(
-                child: SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: defaultTargetPlatform == TargetPlatform.android
-                          ? size.width
-                          : size.width * 0.7,
-                    ),
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          height: 100,
-                        ),
-                        imageContainer(size),
-                        Card(
-                          elevation: 5,
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+              body: SingleChildScrollView(
+                child: StatefulBuilder(
+                  builder: (BuildContext context, setState) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height,
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints.expand(
+                              height: size.height,
+                              width: SizeScreen.isMobile(context)
+                                  ? size.width
+                                  : size.width / 2,
+                            ),
+                            child: ListView(
+                              shrinkWrap: true,
                               children: [
+                                (mobileImage.path == "zz")
+                                    ? imageContainer(size)
+                                    : (kIsWeb)
+                                        ? Image.memory(
+                                            webImage,
+                                            width: SizeScreen.isMobile(context)
+                                                ? 50
+                                                : 300,
+                                            height: SizeScreen.isMobile(context)
+                                                ? 50
+                                                : 300,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.file(
+                                            mobileImage,
+                                            width: 50,
+                                            height: 50,
+                                          ),
                                 const SizedBox(
-                                  height: 30,
+                                  height: 10,
                                 ),
-                                categoryList(size),
+                                FutureBuilder<CategoryModel>(
+                                    future: futureCategory,
+                                    builder: (context, snapshot) {
+                                      return SizedBox(
+                                        height: 40,
+                                        child: ScrollConfiguration(
+                                          behavior: MyCustomScrollBehavior(),
+                                          child: ListView.builder(
+                                              scrollDirection: Axis.horizontal,
+                                              itemCount: categories.length,
+                                              itemBuilder: ((context, index) {
+                                                var categoryItem =
+                                                    categories[index];
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      selectedIndex = index;
+                                                      if (selectedIndex ==
+                                                          index) {
+                                                        setState(() {
+                                                          GlobalSharedPreference
+                                                              .setCategoryID(
+                                                                  categoryItem
+                                                                      .categoryId);
+                                                          GlobalSharedPreference
+                                                              .setCategoryName(
+                                                                  categoryItem
+                                                                      .categoryName);
+                                                        });
+                                                      }
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                            left: 5.0),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      horizontal: 15.0, //20
+                                                      vertical: 10.0, //5
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                        color: selectedIndex ==
+                                                                index
+                                                            ? HexColor(
+                                                                categoryItem
+                                                                    .categoryHexColor,
+                                                              )
+                                                            : Colors
+                                                                .transparent,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8.0)),
+                                                    child: Center(
+                                                      child: Text(
+                                                        categoryItem
+                                                            .categoryName,
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color:
+                                                                selectedIndex ==
+                                                                        index
+                                                                    ? Colors
+                                                                        .white
+                                                                    : Colors
+                                                                        .grey,
+                                                            fontFamily: GoogleFonts
+                                                                    .getFont(
+                                                                        categoryItem
+                                                                            .categoryGoogleFont)
+                                                                .fontFamily),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              })),
+                                        ),
+                                      );
+                                    }),
                                 const SizedBox(
-                                  height: 30,
+                                  height: 10,
                                 ),
                                 Form(
-                                  key: _formKey,
                                   child: Column(
                                     children: [
-                                      defaultTargetPlatform ==
-                                              TargetPlatform.android
-                                          ? Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                nameTextField(),
-                                                durationTextField(),
-                                              ],
-                                            )
-                                          : Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                nameTextField(),
-                                                durationTextField(),
-                                              ],
+                                      Container(
+                                        padding: const EdgeInsets.only(
+                                            top: 10, left: 10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(
+                                              color: const Color.fromARGB(
+                                                  255, 243, 65, 33),
+                                              width: 1),
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(4),
+                                          ),
+                                        ),
+                                        child: TextFormField(
+                                          controller: nameController,
+                                          cursorColor: const Color.fromARGB(
+                                              255, 148, 0, 86),
+                                          //  controller: usernameController,
+                                          decoration: const InputDecoration(
+                                            // labelStyle: labelTextStyle,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent),
                                             ),
-                                      difficultySelection(size),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 25,
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.only(
+                                            top: 10, left: 10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(
+                                              color: const Color.fromARGB(
+                                                  255, 243, 65, 33),
+                                              width: 1),
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(4),
+                                          ),
+                                        ),
+                                        child: TextFormField(
+                                          controller: durationController,
+                                          cursorColor: const Color.fromARGB(
+                                              255, 148, 0, 86),
+                                          //  controller: usernameController,
+                                          decoration: const InputDecoration(
+                                            // labelStyle: labelTextStyle,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 25,
+                                      ),
                                       ingredientListTextField(),
-                                      preparationTextField(),
-                                      button(size),
+                                      const SizedBox(
+                                        height: 25,
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.only(
+                                            top: 10, left: 10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(
+                                              color: const Color.fromARGB(
+                                                  255, 243, 65, 33),
+                                              width: 1),
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(4),
+                                          ),
+                                        ),
+                                        child: TextFormField(
+                                          controller: preparationController,
+                                          cursorColor: const Color.fromARGB(
+                                              255, 148, 0, 86),
+                                          //  controller: usernameController,
+                                          decoration: const InputDecoration(
+                                            // labelStyle: labelTextStyle,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ]),
+                                const SizedBox(
+                                  height: 50,
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _showSheet(context, size);
+                                  },
+                                  child: const Text('Preview'),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             );
@@ -198,8 +392,8 @@ class _AddRecipeScreenState extends State<AddRecipePage>
   }
 
   Future getGategorieList() async {
-    _futureCategory =
-        HttpService.getAllCategories(_categories).then((value) async {
+    futureCategory =
+        HttpService.getAllCategories(categories).then((value) async {
       return Future.value(value);
     });
   }
@@ -257,7 +451,7 @@ class _AddRecipeScreenState extends State<AddRecipePage>
       width: size.width * 0.7,
       child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: _categories.length,
+          itemCount: categories.length,
           itemBuilder: (context, index) {
             return listCategoryItems(index);
           }),
@@ -340,13 +534,18 @@ class _AddRecipeScreenState extends State<AddRecipePage>
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SizedBox(
-        height: 300,
-        width: 300,
+        height: MediaQuery.of(context).size.height / 0.030,
+        width: SizeScreen.isMobile(context)
+            ? MediaQuery.of(context).size.width
+            : MediaQuery.of(context).size.width / 2.3,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(children: [
-              const Text('Press + to Add Recipe'),
+              const Text(
+                'Press + to Add Recipe',
+                style: TextStyle(color: Colors.grey),
+              ),
               Expanded(
                   flex: 1,
                   child: IconButton(
@@ -355,7 +554,7 @@ class _AddRecipeScreenState extends State<AddRecipePage>
             Expanded(
               flex: 1,
               child: SizedBox(
-                width: 600,
+                width: MediaQuery.of(context).size.width,
                 height: 240,
                 child: ingredientlistViewTextField(),
               ),
@@ -366,23 +565,57 @@ class _AddRecipeScreenState extends State<AddRecipePage>
     );
   }
 
+  void addTextFields() {
+    var field = TextFormField();
+    final controller = TextEditingController();
+    setState(() {
+      toDeletefield = field;
+      toDeletecontroller = controller;
+      scrollController.animateTo(
+        0.0,
+        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 300),
+      );
+    });
+    field = TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(20.0),
+          hintText: 'Add Ingredient',
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 15.0),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              setState(() {
+                _fields.remove(field);
+                _controllers.remove(controller);
+              });
+            },
+          )),
+    );
+
+    setState(() {
+      _controllers.add(controller);
+      _fields.add(field);
+    });
+  }
+
   Widget ingredientlistViewTextField() {
-    return LimitedBox(
-      maxHeight: 300,
-      child: ListView.builder(
-        itemCount: _fields.length,
-        shrinkWrap: true,
-        itemBuilder: (context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(5),
-            ),
-            margin: const EdgeInsets.all(5),
-            child: _fields[index],
-          );
-        },
-      ),
+    return ListView.builder(
+      controller: scrollController,
+      itemCount: _fields.length,
+      shrinkWrap: true,
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(5),
+          ),
+          margin: const EdgeInsets.all(5),
+          child: _fields[index],
+        );
+      },
     );
   }
 
@@ -433,37 +666,6 @@ class _AddRecipeScreenState extends State<AddRecipePage>
     );
   }
 
-  void addTextFields() {
-    var field = TextFormField();
-    final controller = TextEditingController();
-    setState(() {
-      toDeletefield = field;
-      toDeletecontroller = controller;
-    });
-    field = TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(20.0),
-          hintText: 'Add Ingredient',
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 15.0),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              setState(() {
-                _fields.remove(field);
-                _controllers.remove(controller);
-              });
-            },
-          )),
-    );
-
-    setState(() {
-      _controllers.add(controller);
-      _fields.add(field);
-    });
-  }
-
   Widget listCategoryItems(int index) {
     return GestureDetector(
       onTap: () {
@@ -484,7 +686,7 @@ class _AddRecipeScreenState extends State<AddRecipePage>
             borderRadius: BorderRadius.circular(8.0)),
         child: Center(
           child: Text(
-            _categories[index].categoryName,
+            categories[index].categoryName,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Color.fromARGB(255, 85, 4, 4),
@@ -735,7 +937,15 @@ class _AddRecipeScreenState extends State<AddRecipePage>
   }
 
   _getCategoryName(int selectedIndex) {
-    return _categories[selectedIndex];
+    return categories[selectedIndex];
+  }
+
+  _getCategoryColor(int selectedIndex) {
+    return categories[selectedIndex].categoryHexColor;
+  }
+
+  _getCategoryFont(int selectedIndex) {
+    return categories[selectedIndex].categoryGoogleFont;
   }
 
   _getRecipeName() {
@@ -764,7 +974,7 @@ class _AddRecipeScreenState extends State<AddRecipePage>
   }
 
   _getCategoryID(int index) {
-    var catId = _categories[index].categoryId;
+    var catId = categories[index].categoryId;
 
     return catId;
   }
@@ -790,6 +1000,8 @@ class _AddRecipeScreenState extends State<AddRecipePage>
     request.fields['recipePreparation'] = _getRecipePreparation();
     request.fields['recipeCategoryname'] =
         _getCategoryName(selectedIndex).toString();
+    request.fields['categoryHexColor'] = _getCategoryColor(selectedIndex);
+    request.fields['categoryGoogleFont'] = _getCategoryFont(selectedIndex);
 
     kIsWeb
         ? request.files.add(
